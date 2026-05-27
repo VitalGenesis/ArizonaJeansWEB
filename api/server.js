@@ -1,216 +1,208 @@
-const express = require("express");
-const { MercadoPagoConfig, Preference } = require("mercadopago");
-const cors = require("cors");
-const nodemailer = require("nodemailer");
+const express = require('express');
+const cors = require('cors');
+const nodemailer = require('nodemailer');
+const path = require('path');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use(express.static(path.join(__dirname, '../public')));
 
-// ── CONFIG ──
-const TC = 1300; // Tipo de cambio USD → ARS
+// ═══════════════════════════════════════════
+// CONFIGURACIÓN — completar con tus variables
+// ═══════════════════════════════════════════
+const MP_ACCESS_TOKEN = process.env.MP_ACCESS_TOKEN || '';
+const BASE_URL        = process.env.BASE_URL        || 'http://localhost:3000';
+const GMAIL_USER      = process.env.GMAIL_USER      || '';
+const GMAIL_APP_PASS  = process.env.GMAIL_APP_PASSWORD || '';
+const ADMIN_EMAIL     = process.env.ADMIN_EMAIL     || '';
+const WA_NUMBER       = '5493521410478'; // ← reemplazar con el número real
 
-const client = new MercadoPagoConfig({
-  accessToken: process.env.MP_ACCESS_TOKEN || "",
-});
+// ── MERCADOPAGO ──────────────────────────────
+let mpClient = null;
+(async () => {
+  if (!MP_ACCESS_TOKEN) return;
+  try {
+    const { MercadoPagoConfig, Preference } = require('mercadopago');
+    mpClient = new MercadoPagoConfig({ accessToken: MP_ACCESS_TOKEN });
+    console.log('[AZ] MercadoPago inicializado ✓');
+  } catch (e) {
+    console.warn('[AZ] MercadoPago no disponible:', e.message);
+  }
+})();
 
-const BASE_URL = process.env.BASE_URL || "http://localhost:3000";
-const WA_NUMBER = "5493512345678";
-
-// ── MAILER ──
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_APP_PASSWORD,
-  },
-});
-
-// ── EMAIL TEMPLATES ──
-function templateAdmin(data) {
-  const { producto, comprador, entrega, mp_id } = data;
-  const arsTotal = ((producto.precio + (entrega.tipo === "envio" ? 500 / TC : 0)) * TC).toLocaleString("es-AR");
-
-  return `
-  <!DOCTYPE html>
-  <html lang="es">
-  <head><meta charset="UTF-8"><style>
-    body { font-family: 'Helvetica Neue', Arial, sans-serif; background: #0e0c0a; color: #f5f0e8; margin: 0; padding: 0; }
-    .wrap { max-width: 560px; margin: 0 auto; padding: 32px 20px; }
-    .header { background: #c9a84c; padding: 24px 28px; text-align: center; }
-    .header h1 { margin: 0; font-size: 1.3rem; font-weight: 700; color: #000; letter-spacing: 0.05em; text-transform: uppercase; }
-    .card { background: #141210; border: 1px solid rgba(201,168,76,0.15); padding: 24px 28px; margin-top: 16px; }
-    .row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(201,168,76,0.08); }
-    .row:last-child { border-bottom: none; }
-    .lbl { color: #9a9085; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.06em; }
-    .val { color: #f5f0e8; font-size: 0.88rem; font-weight: 600; }
-    .total { font-size: 1.2rem; color: #c9a84c; font-weight: 700; }
-    .badge { background: #c9a84c; color: #000; padding: 3px 10px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
-    .wa-btn { display: inline-block; margin-top: 20px; background: #25D366; color: #fff; padding: 12px 24px; text-decoration: none; font-weight: 700; font-size: 0.82rem; letter-spacing: 0.06em; text-transform: uppercase; }
-    footer { text-align: center; margin-top: 28px; color: #9a9085; font-size: 0.75rem; }
-  </style></head>
-  <body><div class="wrap">
-    <div class="header"><h1>🛍️ Nueva venta — Arizona Jeans</h1></div>
-    <div class="card">
-      <div class="row"><span class="lbl">Producto</span><span class="val">${producto.nombre}</span></div>
-      <div class="row"><span class="lbl">Categoría</span><span class="val">${producto.categoria}</span></div>
-      <div class="row"><span class="lbl">Precio USD</span><span class="val">USD ${producto.precio}</span></div>
-      <div class="row"><span class="lbl">Total ARS</span><span class="val total">$${arsTotal}</span></div>
-    </div>
-    <div class="card">
-      <div class="row"><span class="lbl">Nombre</span><span class="val">${comprador.nombre}</span></div>
-      <div class="row"><span class="lbl">Email</span><span class="val">${comprador.email}</span></div>
-      <div class="row"><span class="lbl">Teléfono</span><span class="val">${comprador.telefono}</span></div>
-      <div class="row"><span class="lbl">DNI</span><span class="val">${comprador.dni}</span></div>
-    </div>
-    <div class="card">
-      <div class="row"><span class="lbl">Entrega</span><span class="val"><span class="badge">${entrega.tipo}</span></span></div>
-      <div class="row"><span class="lbl">Dirección</span><span class="val">${entrega.direccion || "—"}</span></div>
-      ${entrega.ciudad ? `<div class="row"><span class="lbl">Ciudad</span><span class="val">${entrega.ciudad}, ${entrega.provincia}</span></div>` : ""}
-    </div>
-    <div class="card">
-      <div class="row"><span class="lbl">ID MercadoPago</span><span class="val">${mp_id || "—"}</span></div>
-    </div>
-    <div style="text-align:center">
-      <a href="https://wa.me/${WA_NUMBER}?text=Hola+${encodeURIComponent(comprador.nombre)},+tu+pedido+de+${encodeURIComponent(producto.nombre)}+está+confirmado!" class="wa-btn">Contactar por WhatsApp</a>
-    </div>
-    <footer>Arizona Jeans · Moda · San José de la Dormida</footer>
-  </div></body></html>`;
+// ── NODEMAILER ───────────────────────────────
+function createTransport() {
+  if (!GMAIL_USER || !GMAIL_APP_PASS) return null;
+  return nodemailer.createTransport({
+    service: 'gmail',
+    auth: { user: GMAIL_USER, pass: GMAIL_APP_PASS }
+  });
 }
 
-function templateCliente(data) {
-  const { producto, comprador, entrega } = data;
-  const arsTotal = (producto.precio * TC).toLocaleString("es-AR");
-
-  return `
-  <!DOCTYPE html>
-  <html lang="es">
-  <head><meta charset="UTF-8"><style>
-    body { font-family: 'Helvetica Neue', Arial, sans-serif; background: #0e0c0a; color: #f5f0e8; margin: 0; padding: 0; }
-    .wrap { max-width: 540px; margin: 0 auto; padding: 28px 16px; }
-    .banner { background: #c9a84c; padding: 28px 24px; text-align: center; }
-    .banner h1 { margin: 0 0 6px; font-size: 1.5rem; font-weight: 700; color: #000; }
-    .banner p { margin: 0; color: rgba(0,0,0,0.6); font-size: 0.88rem; }
-    .card { background: #141210; border: 1px solid rgba(201,168,76,0.15); padding: 22px 24px; margin-top: 14px; }
-    .card h3 { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #c9a84c; margin: 0 0 14px; }
-    .row { display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid rgba(201,168,76,0.06); }
-    .row:last-child { border-bottom: none; }
-    .lbl { color: #9a9085; font-size: 0.8rem; }
-    .val { color: #f5f0e8; font-size: 0.85rem; font-weight: 600; }
-    .price { color: #c9a84c; font-size: 1.1rem; font-weight: 700; }
-    .footer-card { text-align: center; padding: 24px; background: #141210; border: 1px solid rgba(201,168,76,0.15); margin-top: 14px; }
-    .wa-btn { display: inline-block; background: #25D366; color: #fff; padding: 11px 22px; text-decoration: none; font-weight: 700; font-size: 0.8rem; letter-spacing: 0.06em; text-transform: uppercase; margin-top: 10px; }
-    footer { text-align: center; margin-top: 24px; color: #9a9085; font-size: 0.72rem; }
-  </style></head>
-  <body><div class="wrap">
-    <div class="banner">
-      <h1>✅ ¡Compra confirmada!</h1>
-      <p>Gracias por tu compra, ${comprador.nombre}.</p>
-    </div>
-    <div class="card">
-      <h3>Tu pedido</h3>
-      <div class="row"><span class="lbl">Producto</span><span class="val">${producto.nombre}</span></div>
-      <div class="row"><span class="lbl">Categoría</span><span class="val">${producto.categoria}</span></div>
-      <div class="row"><span class="lbl">Total</span><span class="val price">ARS $${arsTotal}</span></div>
-    </div>
-    <div class="card">
-      <h3>Entrega</h3>
-      <div class="row"><span class="lbl">Modalidad</span><span class="val">${entrega.tipo === "retiro" ? "🏪 Retiro en local" : entrega.tipo === "interior" ? "🚚 Envío al interior" : "🏠 Envío a domicilio"}</span></div>
-      ${entrega.tipo === "retiro" ? `<div class="row"><span class="lbl">Lugar</span><span class="val">San José de la Dormida, Córdoba</span></div>` : ""}
-      ${entrega.tipo === "envio" ? `<div class="row"><span class="lbl">Dirección</span><span class="val">${entrega.direccion}</span></div>` : ""}
-    </div>
-    <div class="footer-card">
-      <p style="color:#9a9085;font-size:0.83rem;margin:0 0 8px;">Te contactamos en menos de 1 hora para coordinar la entrega.</p>
-      <a href="https://wa.me/${WA_NUMBER}?text=Hola!+Consulta+sobre+mi+compra+de+${encodeURIComponent(producto.nombre)}" class="wa-btn">Consultar por WhatsApp</a>
-    </div>
-    <footer>Arizona Jeans · Moda con identidad · San José de la Dormida, Córdoba</footer>
-  </div></body></html>`;
+// ── EMAIL CLIENTE ────────────────────────────
+function htmlCliente({ nombre, producto, precio, metodo, direccion }) {
+  return `<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="UTF-8"><style>
+body{font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;background:#f4f0e8;margin:0;padding:0;}
+.wrap{max-width:560px;margin:32px auto;background:#0e0c0a;border:1px solid rgba(201,168,76,0.3);}
+.header{background:#c9a84c;padding:28px 32px;text-align:center;}
+.header h1{margin:0;color:#000;font-size:1.4rem;letter-spacing:.06em;text-transform:uppercase;}
+.header p{margin:4px 0 0;color:#4a3800;font-size:.78rem;letter-spacing:.1em;}
+.body{padding:28px 32px;color:#f5f0e8;}
+.body h2{font-size:1.1rem;color:#c9a84c;margin-bottom:16px;border-bottom:1px solid rgba(201,168,76,0.2);padding-bottom:10px;}
+.row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:.85rem;}
+.row .label{color:#9a9085;}
+.row .value{color:#f5f0e8;font-weight:600;}
+.footer{background:#141210;padding:18px 32px;text-align:center;color:#9a9085;font-size:.72rem;border-top:1px solid rgba(201,168,76,0.15);}
+.btn{display:inline-block;margin-top:18px;padding:12px 28px;background:#25D366;color:#fff;text-decoration:none;font-weight:700;font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;}
+</style></head>
+<body>
+<div class="wrap">
+  <div class="header">
+    <h1>Arizona Jeans</h1>
+    <p>Moda · San José de la Dormida · Córdoba</p>
+  </div>
+  <div class="body">
+    <h2>✨ ¡Pedido recibido, ${nombre}!</h2>
+    <p style="color:#9a9085;font-size:.85rem;margin-bottom:18px;">Nos contactamos en menos de 24hs para coordinar la entrega.</p>
+    <div class="row"><span class="label">Prenda</span><span class="value">${producto}</span></div>
+    <div class="row"><span class="label">Precio</span><span class="value">$${Number(precio).toLocaleString('es-AR')} ARS</span></div>
+    <div class="row"><span class="label">Método de pago</span><span class="value">${metodo}</span></div>
+    ${direccion ? `<div class="row"><span class="label">Dirección</span><span class="value">${direccion}</span></div>` : ''}
+    <a class="btn" href="https://wa.me/${WA_NUMBER}?text=Hola! Consulta sobre mi pedido reciente">
+      Consultar por WhatsApp
+    </a>
+  </div>
+  <div class="footer">© 2026 Arizona Jeans · San José de la Dormida · Córdoba</div>
+</div>
+</body></html>`;
 }
 
-// ── ROUTES ──
+// ── EMAIL ADMIN ──────────────────────────────
+function htmlAdmin({ nombre, email, tel, dni, producto, precio, metodo, direccion, direccionUrl }) {
+  return `<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="UTF-8"><style>
+body{font-family:Arial,sans-serif;background:#f4f0e8;margin:0;padding:0;}
+.wrap{max-width:560px;margin:32px auto;background:#0e0c0a;border:1px solid rgba(201,168,76,0.3);}
+.header{background:#a8813a;padding:20px 28px;}
+.header h1{margin:0;color:#fff;font-size:1.1rem;text-transform:uppercase;letter-spacing:.06em;}
+.body{padding:24px 28px;color:#f5f0e8;}
+.row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:.82rem;}
+.row .label{color:#9a9085;}
+.row .value{color:#f5f0e8;font-weight:600;text-align:right;max-width:60%;}
+.map-btn{display:inline-block;margin-top:14px;padding:10px 22px;background:#c9a84c;color:#000;text-decoration:none;font-weight:700;font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;}
+</style></head>
+<body>
+<div class="wrap">
+  <div class="header"><h1>🛍️ Nuevo pedido — Arizona Jeans</h1></div>
+  <div class="body">
+    <div class="row"><span class="label">Cliente</span><span class="value">${nombre}</span></div>
+    <div class="row"><span class="label">Email</span><span class="value">${email}</span></div>
+    <div class="row"><span class="label">WhatsApp</span><span class="value">${tel||'—'}</span></div>
+    <div class="row"><span class="label">DNI</span><span class="value">${dni||'—'}</span></div>
+    <div class="row"><span class="label">Prenda</span><span class="value">${producto}</span></div>
+    <div class="row"><span class="label">Precio</span><span class="value">$${Number(precio).toLocaleString('es-AR')} ARS</span></div>
+    <div class="row"><span class="label">Método</span><span class="value">${metodo}</span></div>
+    ${direccion ? `<div class="row"><span class="label">Dirección</span><span class="value">${direccion}</span></div>` : ''}
+    ${direccionUrl ? `<a class="map-btn" href="${direccionUrl}" target="_blank">📍 Ver en Google Maps</a>` : ''}
+  </div>
+</div>
+</body></html>`;
+}
+
+// ═══════════════════════════════════════════
+// RUTAS
+// ═══════════════════════════════════════════
 
 // Health check
-app.get("/api/health", (req, res) => {
-  res.json({ ok: true, tienda: "Arizona Jeans", timestamp: new Date().toISOString() });
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', tienda: 'Arizona Jeans', ts: new Date().toISOString() });
 });
 
-// Crear preferencia MP
-app.post("/api/crear-preferencia", async (req, res) => {
-  const { producto, comprador, entrega } = req.body;
-  if (!producto || !comprador || !entrega) {
-    return res.status(400).json({ error: "Datos incompletos" });
+// Crear pago MercadoPago
+app.post('/api/crear-pago', async (req, res) => {
+  const { producto, precio, cantidad = 1, comprador } = req.body;
+  if (!producto || !precio) return res.status(400).json({ error: 'Faltan datos' });
+
+  // Enviar emails en paralelo (si están configurados)
+  const transport = createTransport();
+  if (transport && comprador?.email) {
+    const metodoLabel = 'MercadoPago';
+    const promises = [
+      transport.sendMail({
+        from: `"Arizona Jeans" <${GMAIL_USER}>`,
+        to: comprador.email,
+        subject: `✨ Pedido recibido — ${producto}`,
+        html: htmlCliente({
+          nombre: comprador.nombre,
+          producto,
+          precio,
+          metodo: metodoLabel,
+          direccion: comprador.direccion
+        })
+      }).catch(e => console.warn('Email cliente:', e.message))
+    ];
+    if (ADMIN_EMAIL) {
+      promises.push(
+        transport.sendMail({
+          from: `"Arizona Jeans" <${GMAIL_USER}>`,
+          to: ADMIN_EMAIL,
+          subject: `🛍️ Nuevo pedido: ${producto} — ${comprador.nombre}`,
+          html: htmlAdmin({ ...comprador, producto, precio, metodo: metodoLabel })
+        }).catch(e => console.warn('Email admin:', e.message))
+      );
+    }
+    await Promise.allSettled(promises);
+  }
+
+  // Si no hay token MP devolvemos error claro
+  if (!MP_ACCESS_TOKEN || !mpClient) {
+    return res.status(503).json({ error: 'MP_ACCESS_TOKEN no configurado' });
   }
 
   try {
-    const precioBase = producto.precio * TC;
-    const costoEnvio = entrega.tipo === "envio" ? 500 : 0;
-    const precioTotal = Math.round(precioBase + costoEnvio);
-
-    const preference = new Preference(client);
-    const response = await preference.create({
+    const { Preference } = require('mercadopago');
+    const pref = new Preference(mpClient);
+    const result = await pref.create({
       body: {
-        items: [
-          {
-            id: producto.id,
-            title: `${producto.nombre} — Arizona Jeans`,
-            quantity: 1,
-            currency_id: "ARS",
-            unit_price: precioTotal,
-          },
-        ],
-        payer: {
-          name: comprador.nombre,
-          email: comprador.email,
-          phone: { number: comprador.telefono },
-          identification: { type: "DNI", number: comprador.dni },
-        },
+        items: [{ title: producto, unit_price: Number(precio), quantity: Number(cantidad), currency_id: 'ARS' }],
+        payer: { name: comprador?.nombre, email: comprador?.email },
         back_urls: {
           success: `${BASE_URL}/exito.html`,
           failure: `${BASE_URL}/error.html`,
-          pending: `${BASE_URL}/pendiente.html`,
+          pending: `${BASE_URL}/pendiente.html`
         },
-        auto_return: "approved",
-        metadata: { comprador, entrega, producto },
-        statement_descriptor: "ARIZONA JEANS",
-      },
+        auto_return: 'approved',
+        statement_descriptor: 'ARIZONA JEANS',
+        external_reference: `${Date.now()}-${(comprador?.nombre||'').replace(/\s/g,'-')}`
+      }
     });
-
-    // Send emails (async, don't await)
-    const emailData = { producto, comprador, entrega, mp_id: response.id };
-    const mailOptions = {
-      adminTo: process.env.ADMIN_EMAIL || process.env.GMAIL_USER,
-      clientTo: comprador.email,
-    };
-
-    Promise.all([
-      transporter.sendMail({
-        from: `"Arizona Jeans" <${process.env.GMAIL_USER}>`,
-        to: mailOptions.adminTo,
-        subject: `🛍️ Nueva venta: ${producto.nombre} — ${comprador.nombre}`,
-        html: templateAdmin(emailData),
-      }),
-      transporter.sendMail({
-        from: `"Arizona Jeans" <${process.env.GMAIL_USER}>`,
-        to: mailOptions.clientTo,
-        subject: `✅ Confirmación de compra — Arizona Jeans`,
-        html: templateCliente(emailData),
-      }),
-    ]).catch(err => console.error("Email error:", err));
-
-    res.json({ init_point: response.init_point, preference_id: response.id });
-  } catch (err) {
-    console.error("MP error:", err);
-    res.status(500).json({ error: "Error al crear preferencia", detail: err.message });
+    res.json({ init_point: result.init_point });
+  } catch (e) {
+    console.error('[AZ] MP error:', e.message);
+    res.status(500).json({ error: 'Error al crear preferencia' });
   }
 });
 
-// Webhook MP
-app.post("/api/webhook", async (req, res) => {
-  console.log("Webhook recibido:", req.body);
+// Webhook MercadoPago
+app.post('/api/webhook', async (req, res) => {
+  const { type, data } = req.body;
+  if (type === 'payment' && data?.id) {
+    console.log('[AZ] Pago recibido:', data.id);
+  }
   res.sendStatus(200);
 });
 
+// Ruta catch-all para SPAs
+app.get('*', (req, res) => {
+  if (req.path.startsWith('/api')) return res.status(404).json({ error: 'Not found' });
+  res.sendFile(path.join(__dirname, '../public/index.html'));
+});
+
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Arizona Jeans API running on port ${PORT}`));
+app.listen(PORT, () => console.log(`[AZ] Arizona Jeans corriendo en puerto ${PORT}`));
 
 module.exports = app;

@@ -1,7 +1,7 @@
 {
   "name": "arizona-jeans",
   "version": "1.0.0",
-  "description": "Arizona Jeans — Tienda de Ropa · San José de la Dormida",
+  "description": "Arizona Jeans — Tienda de Ropa · San José de la Dormida · Córdoba",
   "main": "api/server.js",
   "scripts": {
     "start": "node api/server.js",

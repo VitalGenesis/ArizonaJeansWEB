@@ -1,883 +1,683 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Arizona Jeans — Moda con identidad</title>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --bk: #0e0c0a;
-      --dk: #141210;
-      --c1: #1a1714;
-      --c2: #211e1a;
-      --gold: #c9a84c;
-      --gold2: #a8813a;
-      --gold-glow: rgba(201,168,76,0.12);
-      --wh: #f5f0e8;
-      --gr: #9a9085;
-      --sv: #d4c9b8;
-      --br: rgba(201,168,76,0.1);
-    }
-    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Arizona Jeans — Moda · San José de la Dormida · Córdoba</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Cormorant+Garamond:wght@400;500;600&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bk:#0e0c0a;
+  --dk:#141210;
+  --c1:#1a1714;
+  --c2:#211e1a;
+  --gold:#c9a84c;
+  --gold2:#a8813a;
+  --gold-glow:rgba(201,168,76,0.12);
+  --gold-border:rgba(201,168,76,0.22);
+  --wh:#f5f0e8;
+  --gr:#9a9085;
+  --sv:#d4c9b8;
+  --br:rgba(201,168,76,0.1);
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:var(--bk);color:var(--wh);font-family:'Inter',sans-serif;overflow-x:hidden;}
+::-webkit-scrollbar{width:3px;}
+::-webkit-scrollbar-thumb{background:var(--gold2);}
 
-    ::-webkit-scrollbar { width: 4px; }
-    ::-webkit-scrollbar-track { background: var(--bk); }
-    ::-webkit-scrollbar-thumb { background: var(--gold); }
+/* ── NAV ── */
+nav{position:fixed;top:0;left:0;right:0;z-index:900;display:flex;align-items:center;justify-content:space-between;padding:14px 48px;background:rgba(14,12,10,0.97);border-bottom:1px solid var(--gold-border);backdrop-filter:blur(12px);}
+.nl{text-decoration:none;}
+.nl-text{font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:900;color:var(--wh);letter-spacing:.04em;}
+.nl-text span{color:var(--gold);}
+.nl-sub{font-family:'Inter',sans-serif;font-size:.55rem;letter-spacing:.22em;text-transform:uppercase;color:var(--gr);margin-top:2px;}
+.nm{display:flex;gap:28px;list-style:none;align-items:center;}
+.nm a{color:var(--sv);text-decoration:none;font-size:.75rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;transition:color .2s;}
+.nm a:hover{color:var(--gold);}
+.nc{background:var(--gold)!important;color:var(--bk)!important;padding:9px 20px;font-weight:700!important;border-radius:0;}
+.nc:hover{background:#deb95a!important;}
+.hb{display:none;flex-direction:column;gap:5px;cursor:pointer;}
+.hb span{width:24px;height:2px;background:var(--gold);}
 
-    html { scroll-behavior: smooth; }
+/* ── HERO ── */
+.hero{min-height:100vh;display:flex;align-items:center;padding:120px 48px 80px;gap:60px;position:relative;overflow:hidden;}
+.hero-bg{position:absolute;inset:0;background:radial-gradient(ellipse at 70% 50%, rgba(201,168,76,0.05) 0%, transparent 60%),radial-gradient(ellipse at 20% 80%, rgba(201,168,76,0.03) 0%, transparent 50%);pointer-events:none;}
+.hero-line{position:absolute;top:0;left:48px;width:1px;height:100%;background:linear-gradient(to bottom,transparent,var(--gold-border),transparent);}
+.hl{flex:1;position:relative;z-index:1;}
+.hbadge{display:inline-flex;align-items:center;gap:8px;background:rgba(201,168,76,0.08);border:1px solid var(--gold-border);padding:7px 16px;font-size:.65rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin-bottom:24px;}
+.hbadge::before{content:'';width:6px;height:6px;background:var(--gold);border-radius:50%;animation:blink 2s infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.2;}}
+.hero h1{font-family:'Playfair Display',serif;font-size:clamp(4rem,8vw,8rem);font-weight:900;line-height:.88;text-transform:uppercase;margin-bottom:24px;letter-spacing:-.01em;}
+.hero h1 .g{color:var(--gold);}
+.hero h1 .o{-webkit-text-stroke:1px rgba(201,168,76,0.5);color:transparent;}
+.hdesc{font-family:'Cormorant Garamond',serif;color:var(--gr);font-size:1.1rem;line-height:1.7;max-width:420px;margin-bottom:14px;font-style:italic;}
+.hloc{font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:32px;opacity:.8;}
+.hbtns{display:flex;gap:14px;flex-wrap:wrap;}
+.btn-gold{background:var(--gold);color:var(--bk);padding:13px 28px;font-family:'Inter',sans-serif;font-weight:700;font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;border:none;cursor:pointer;text-decoration:none;display:inline-block;transition:background .2s,transform .15s;}
+.btn-gold:hover{background:#deb95a;transform:translateY(-2px);}
+.btn-outline{background:transparent;color:var(--wh);padding:12px 26px;font-family:'Inter',sans-serif;font-weight:600;font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;border:1px solid var(--gold-border);cursor:pointer;text-decoration:none;display:inline-block;transition:border-color .2s,color .2s;}
+.btn-outline:hover{border-color:var(--gold);color:var(--gold);}
+.hr{flex:0 0 340px;display:flex;align-items:center;justify-content:center;position:relative;}
+.hr-inner{width:280px;height:380px;border:1px solid var(--gold-border);display:flex;align-items:center;justify-content:center;position:relative;background:rgba(201,168,76,0.03);}
+.hr-inner::before{content:'';position:absolute;inset:-8px;border:1px solid rgba(201,168,76,0.08);}
+.hr-icon{font-size:7rem;opacity:.7;filter:drop-shadow(0 0 40px rgba(201,168,76,0.3));animation:float 5s ease-in-out infinite;}
+@keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-12px);}}
+.hr-tag{position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);background:var(--gold);color:var(--bk);padding:5px 16px;font-size:.62rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;white-space:nowrap;}
 
-    body {
-      background: var(--bk);
-      color: var(--wh);
-      font-family: 'Inter', sans-serif;
-      font-weight: 300;
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
+/* ── STATS ── */
+.stats{background:var(--dk);border-top:1px solid var(--gold-border);border-bottom:1px solid var(--gold-border);padding:20px 48px;display:flex;justify-content:space-around;align-items:center;gap:16px;flex-wrap:wrap;}
+.st{text-align:center;}
+.sn{font-family:'Playfair Display',serif;font-size:1.7rem;font-weight:900;color:var(--gold);line-height:1;display:block;}
+.sl{font-size:.62rem;color:var(--gr);letter-spacing:.1em;text-transform:uppercase;margin-top:4px;}
+.sdv{width:1px;height:28px;background:var(--gold-border);}
 
-    /* ── NAV ── */
-    nav {
-      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-      background: rgba(14,12,10,0.92);
-      backdrop-filter: blur(12px);
-      border-bottom: 1px solid var(--br);
-      padding: 0 5vw;
-      display: flex; align-items: center; justify-content: space-between;
-      height: 64px;
-    }
-    .nav-logo {
-      font-family: 'Playfair Display', serif;
-      font-size: 1.25rem; font-weight: 700;
-      letter-spacing: 0.04em;
-      color: var(--wh);
-      text-decoration: none;
-    }
-    .nav-logo span { color: var(--gold); }
-    .nav-links { display: flex; gap: 32px; list-style: none; }
-    .nav-links a {
-      color: var(--gr); font-size: 0.8rem; font-weight: 600;
-      letter-spacing: 0.1em; text-transform: uppercase; text-decoration: none;
-      transition: color 0.2s;
-    }
-    .nav-links a:hover { color: var(--gold); }
-    .nav-cta {
-      background: var(--gold); color: #000;
-      padding: 8px 20px; font-size: 0.75rem; font-weight: 700;
-      letter-spacing: 0.08em; text-transform: uppercase;
-      text-decoration: none; border: none; cursor: pointer;
-      transition: background 0.2s;
-    }
-    .nav-cta:hover { background: var(--gold2); }
-    .hamburger { display: none; flex-direction: column; gap: 5px; cursor: pointer; border: none; background: none; }
-    .hamburger span { width: 22px; height: 1.5px; background: var(--wh); display: block; transition: 0.3s; }
+/* ── SECTIONS ── */
+.sec{padding:72px 48px;}
+.stag{font-size:.62rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin-bottom:9px;}
+.stitle{font-family:'Playfair Display',serif;font-size:clamp(2rem,4vw,3.2rem);font-weight:900;text-transform:uppercase;line-height:.95;}
+.stitle span{color:var(--gold);}
+.shd{margin-bottom:40px;}
 
-    /* ── HERO ── */
-    .hero {
-      min-height: 100vh;
-      display: flex; align-items: center;
-      padding: 80px 5vw 0;
-      position: relative;
-      overflow: hidden;
-    }
-    .hero::before {
-      content: '';
-      position: absolute; inset: 0;
-      background: radial-gradient(ellipse 60% 60% at 70% 50%, rgba(201,168,76,0.06) 0%, transparent 70%);
-      pointer-events: none;
-    }
-    .hero-content { flex: 1; max-width: 620px; position: relative; z-index: 2; }
-    .hero-badge {
-      display: inline-flex; align-items: center; gap: 8px;
-      background: var(--gold-glow); border: 1px solid rgba(201,168,76,0.3);
-      padding: 6px 14px; font-size: 0.7rem; font-weight: 600;
-      letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold);
-      margin-bottom: 32px;
-    }
-    .hero-badge::before { content: '●'; font-size: 0.5rem; }
-    .hero-title {
-      font-family: 'Playfair Display', serif;
-      font-size: clamp(4rem, 8vw, 8rem);
-      font-weight: 900;
-      line-height: 0.88;
-      letter-spacing: -0.02em;
-      margin-bottom: 28px;
-    }
-    .hero-title .gold { color: var(--gold); }
-    .hero-subtitle {
-      color: var(--gr); font-size: 1rem; font-weight: 300;
-      line-height: 1.6; margin-bottom: 40px; max-width: 420px;
-    }
-    .hero-btns { display: flex; gap: 12px; flex-wrap: wrap; }
-    .btn-primary {
-      background: var(--gold); color: #000;
-      padding: 14px 32px; font-size: 0.8rem; font-weight: 700;
-      letter-spacing: 0.1em; text-transform: uppercase;
-      text-decoration: none; border: none; cursor: pointer;
-      transition: background 0.2s, transform 0.2s;
-      display: inline-block;
-    }
-    .btn-primary:hover { background: var(--gold2); transform: translateY(-1px); }
-    .btn-outline {
-      background: transparent; color: var(--gold);
-      border: 1px solid var(--gold);
-      padding: 14px 32px; font-size: 0.8rem; font-weight: 700;
-      letter-spacing: 0.1em; text-transform: uppercase;
-      text-decoration: none; cursor: pointer;
-      transition: background 0.2s, color 0.2s, transform 0.2s;
-      display: inline-block;
-    }
-    .btn-outline:hover { background: var(--gold); color: #000; transform: translateY(-1px); }
+/* ── FILTERS ── */
+.fts{display:flex;gap:3px;flex-wrap:wrap;margin-bottom:20px;}
+.fb{background:var(--c1);border:1px solid var(--br);padding:9px 18px;font-family:'Inter',sans-serif;font-weight:600;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;color:var(--gr);transition:all .2s;border-radius:0;}
+.fb.on{background:var(--gold);color:var(--bk);border-color:var(--gold);}
+.fb:hover:not(.on){color:var(--gold);border-color:var(--gold-border);}
 
-    .hero-visual {
-      flex: 1; display: flex; align-items: center; justify-content: center;
-      position: relative; z-index: 2;
-    }
-    .hero-illustration {
-      width: 320px; height: 420px; position: relative;
-    }
-    .hero-illustration svg {
-      width: 100%; height: 100%;
-      filter: drop-shadow(0 0 40px rgba(201,168,76,0.15));
-    }
+/* ── PRODUCT GRID ── */
+.prod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:3px;}
+.prod-card{background:var(--c1);border:1px solid var(--br);overflow:hidden;transition:border-color .3s,transform .2s;}
+.prod-card:hover{border-color:rgba(201,168,76,0.4);transform:translateY(-4px);}
+.prod-img{width:100%;aspect-ratio:1;background:var(--c2);display:flex;align-items:center;justify-content:center;overflow:hidden;}
+.prod-img img{width:100%;height:100%;object-fit:cover;transition:transform .4s;}
+.prod-card:hover .prod-img img{transform:scale(1.05);}
+.prod-img-placeholder{font-size:4rem;}
+.prod-body{padding:18px;}
+.prod-tags{display:flex;gap:5px;margin-bottom:10px;flex-wrap:wrap;}
+.tag{font-size:.56rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:3px 8px;}
+.tag-dest{background:rgba(201,168,76,0.15);border:1px solid rgba(201,168,76,0.3);color:var(--gold);}
+.tag-cat{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:var(--sv);}
+.tag-s{background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.25);color:#4ade80;}
+.tag-u{background:rgba(251,146,60,0.1);border:1px solid rgba(251,146,60,0.25);color:#fb923c;}
+.prod-name{font-family:'Playfair Display',serif;font-size:1.05rem;font-weight:700;line-height:1.2;margin-bottom:5px;}
+.prod-spec{font-size:.73rem;color:var(--gr);margin-bottom:6px;line-height:1.4;}
+.prod-talle{display:inline-flex;align-items:center;gap:5px;font-size:.64rem;padding:3px 9px;margin-bottom:12px;background:rgba(201,168,76,0.07);border:1px solid rgba(201,168,76,0.2);color:var(--gold);}
+.prod-nota{font-size:.62rem;color:#fb923c;margin-bottom:10px;}
+.prod-footer{display:flex;align-items:center;justify-content:space-between;padding-top:14px;border-top:1px solid rgba(255,255,255,0.05);}
+.prod-price{font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:700;color:var(--gold);}
+.prod-price .u{font-size:.6rem;font-weight:400;color:var(--gr);font-family:'Inter',sans-serif;}
+.prod-btn{background:var(--gold);color:var(--bk);border:none;padding:9px 16px;font-family:'Inter',sans-serif;font-weight:700;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;transition:background .15s;border-radius:0;}
+.prod-btn:hover{background:#deb95a;}
+.loading-state{grid-column:1/-1;text-align:center;padding:70px 20px;color:var(--gr);}
+.spin{width:28px;height:28px;border:2px solid rgba(201,168,76,0.2);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.empty-state{grid-column:1/-1;text-align:center;padding:70px 20px;color:var(--gr);border:1px dashed rgba(201,168,76,0.2);}
 
-    /* ── STATS BAR ── */
-    .stats {
-      border-top: 1px solid var(--br);
-      border-bottom: 1px solid var(--br);
-      padding: 28px 5vw;
-      display: grid; grid-template-columns: repeat(4, 1fr);
-      gap: 0;
-      background: var(--dk);
-    }
-    .stat {
-      text-align: center; padding: 0 20px;
-      border-right: 1px solid var(--br);
-    }
-    .stat:last-child { border-right: none; }
-    .stat-value {
-      font-family: 'Playfair Display', serif;
-      font-size: 1.8rem; font-weight: 700; color: var(--gold);
-      display: block; margin-bottom: 4px;
-    }
-    .stat-label { font-size: 0.72rem; font-weight: 400; color: var(--gr); letter-spacing: 0.06em; text-transform: uppercase; }
+/* ── MODAL ── */
+.mo{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9999;display:none;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(10px);}
+.mo.open{display:flex;}
+.md{background:#100e0c;border:1px solid var(--gold-border);width:100%;max-width:500px;max-height:94vh;overflow-y:auto;}
+.mh{background:var(--c1);padding:18px 22px;border-bottom:1px solid var(--gold-border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:1;}
+.mt{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;letter-spacing:.03em;}
+.mc{background:none;border:none;color:var(--gr);font-size:1.4rem;cursor:pointer;line-height:1;}
+.mc:hover{color:var(--wh);}
+.mb{padding:22px;}
+.cp{background:var(--c2);border:1px solid var(--gold-border);padding:14px 16px;margin-bottom:20px;display:flex;align-items:center;gap:13px;}
+.cp-img{width:62px;height:62px;object-fit:cover;flex-shrink:0;}
+.cp-ico{font-size:2.2rem;flex-shrink:0;}
+.cp-name{font-family:'Playfair Display',serif;font-size:.98rem;font-weight:700;line-height:1.2;}
+.cp-det{font-size:.7rem;color:var(--gr);margin-top:3px;}
+.cp-pr{margin-left:auto;text-align:right;flex-shrink:0;}
+.cp-usd{font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:700;color:var(--gold);line-height:1;}
+.cp-ars{font-size:.63rem;color:var(--gr);margin-top:3px;}
+.fg{margin-bottom:12px;}
+.fg label{display:block;font-size:.62rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--gr);margin-bottom:5px;}
+.fg input{width:100%;background:var(--c2);border:1px solid rgba(255,255,255,0.08);color:var(--wh);padding:10px 13px;font-size:.85rem;font-family:'Inter',sans-serif;outline:none;transition:border-color .2s;border-radius:0;}
+.fg input:focus{border-color:var(--gold-border);}
+.fg input::placeholder{color:#3a3530;}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.dv{display:flex;align-items:center;gap:10px;margin:16px 0;}
+.dv::before,.dv::after{content:'';flex:1;height:1px;background:rgba(201,168,76,0.15);}
+.dv span{font-size:.62rem;color:var(--gr);text-transform:uppercase;letter-spacing:.1em;white-space:nowrap;}
+.pos{display:flex;flex-direction:column;gap:8px;margin-bottom:18px;}
+.po{background:var(--c1);border:1px solid rgba(255,255,255,0.07);padding:12px 15px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:border-color .2s,background .2s;}
+.po:hover{border-color:var(--gold-border);background:var(--c2);}
+.po.sel{border-color:var(--gold);background:rgba(201,168,76,0.04);}
+.po input[type=radio]{accent-color:var(--gold);width:14px;height:14px;flex-shrink:0;}
+.po-ico{font-size:1.2rem;flex-shrink:0;}
+.po-nm{font-family:'Inter',sans-serif;font-size:.85rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em;}
+.po-ds{font-size:.66rem;color:var(--gr);margin-top:2px;}
+.pagar{width:100%;padding:14px;background:var(--gold);color:var(--bk);border:none;font-family:'Inter',sans-serif;font-weight:700;font-size:.9rem;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:background .2s,transform .15s;display:flex;align-items:center;justify-content:center;gap:10px;border-radius:0;}
+.pagar:hover{background:#deb95a;transform:translateY(-1px);}
+.pagar:disabled{background:#2a2420;color:#444;cursor:not-allowed;transform:none;}
+.sp{width:14px;height:14px;border:2px solid rgba(0,0,0,.25);border-top-color:#000;border-radius:50%;animation:spin .6s linear infinite;display:none;}
+.pagar.loading .sp{display:inline-block;}
+.mf{text-align:center;margin-top:14px;}
+.mf p{font-size:.65rem;color:var(--gr);line-height:1.5;}
+.mpb{display:inline-flex;align-items:center;gap:5px;margin-top:8px;background:#009ee3;padding:4px 13px;font-size:.68rem;font-weight:700;color:#fff;}
 
-    /* ── PRODUCTS ── */
-    .products-section { padding: 80px 5vw; }
-    .section-header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 40px; flex-wrap: wrap; gap: 20px; }
-    .section-label { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: var(--gold); margin-bottom: 8px; }
-    .section-title { font-family: 'Playfair Display', serif; font-size: 2.4rem; font-weight: 700; color: var(--wh); }
+/* ── WHY US ── */
+.wg{display:grid;grid-template-columns:repeat(4,1fr);gap:3px;}
+.wc{background:var(--c1);border:1px solid var(--br);padding:28px 20px;text-align:center;transition:border-color .3s;}
+.wc:hover{border-color:var(--gold-border);}
+.wi{font-size:1.8rem;margin-bottom:12px;}
+.wt{font-family:'Inter',sans-serif;font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--gold);margin-bottom:7px;}
+.wd{font-size:.76rem;color:var(--gr);line-height:1.6;}
 
-    .filters { display: flex; gap: 8px; flex-wrap: wrap; }
-    .filter-btn {
-      padding: 7px 16px; font-size: 0.72rem; font-weight: 600;
-      letter-spacing: 0.08em; text-transform: uppercase;
-      border: 1px solid var(--br); background: transparent; color: var(--gr);
-      cursor: pointer; transition: all 0.2s;
-    }
-    .filter-btn:hover, .filter-btn.active {
-      border-color: var(--gold); color: var(--gold); background: var(--gold-glow);
-    }
+/* ── CONTACT ── */
+.cg{display:grid;grid-template-columns:1fr 1fr;gap:3px;}
+.cc{background:var(--c1);border:1px solid var(--br);padding:40px;}
+.cc h3{font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:700;margin-bottom:24px;}
+.cr{display:flex;align-items:flex-start;gap:12px;margin-bottom:18px;}
+.ci{width:36px;height:36px;background:rgba(201,168,76,0.07);border:1px solid var(--gold-border);display:flex;align-items:center;justify-content:center;font-size:.85rem;flex-shrink:0;}
+.ct strong{display:block;font-weight:700;font-size:.82rem;margin-bottom:2px;}
+.ct span,.ct a{font-size:.76rem;color:var(--gr);}
+.ct a{color:var(--gold);text-decoration:none;}
+.wa{display:inline-flex;align-items:center;gap:10px;background:#25D366;color:#fff;padding:13px 24px;font-family:'Inter',sans-serif;font-weight:700;font-size:.82rem;letter-spacing:.07em;text-transform:uppercase;text-decoration:none;margin-top:6px;transition:background .2s;}
+.wa:hover{background:#1da851;}
+.pbl{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+.pb{background:rgba(201,168,76,0.06);border:1px solid var(--gold-border);padding:4px 10px;font-size:.7rem;color:var(--gold);}
+.cc2{background:var(--c2);border:1px solid var(--br);padding:40px;display:flex;flex-direction:column;gap:14px;}
+.ib{background:var(--bk);border:1px solid var(--gold-border);padding:22px;text-align:center;}
+.ib .ig{font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:700;color:var(--gold);}
+.ib .sub{font-size:.6rem;color:var(--gr);text-transform:uppercase;letter-spacing:.1em;margin-top:3px;}
+.ib .num{font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:900;}
+.ec{background:var(--bk);border:1px solid var(--gold-border);padding:16px;display:flex;align-items:center;gap:13px;}
+.ec-t strong{display:block;font-family:'Inter',sans-serif;font-size:.85rem;font-weight:700;text-transform:uppercase;color:var(--gold);}
+.ec-t span{font-size:.72rem;color:var(--gr);}
 
-    .products-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-      gap: 20px;
-    }
+/* ── FOOTER ── */
+footer{background:#080604;border-top:1px solid var(--gold-border);padding:44px 48px 28px;}
+.ft{display:flex;justify-content:space-between;flex-wrap:wrap;gap:30px;margin-bottom:36px;}
+.fbb .logo-f{font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:900;color:var(--wh);margin-bottom:4px;}
+.fbb .logo-f span{color:var(--gold);}
+.fbb .sub-f{font-size:.58rem;letter-spacing:.18em;text-transform:uppercase;color:var(--gr);margin-bottom:10px;}
+.fbb p{font-size:.76rem;color:var(--gr);line-height:1.7;max-width:230px;}
+.fc h5{font-family:'Inter',sans-serif;font-size:.6rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin-bottom:10px;}
+.fc ul{list-style:none;}
+.fc li{margin-bottom:7px;}
+.fc a{color:var(--gr);text-decoration:none;font-size:.76rem;transition:color .2s;}
+.fc a:hover{color:var(--wh);}
+.fb2{border-top:1px solid var(--br);padding-top:18px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;}
+.copy{font-size:.7rem;color:var(--gr);}
+.tgl{font-family:'Playfair Display',serif;font-size:.9rem;font-style:italic;color:var(--gr);}
+.tgl span{color:var(--gold);}
 
-    .product-card {
-      background: var(--c1); border: 1px solid var(--br);
-      overflow: hidden; cursor: pointer;
-      transition: border-color 0.25s, transform 0.25s;
-      display: flex; flex-direction: column;
-    }
-    .product-card:hover { border-color: var(--gold); transform: translateY(-4px); }
+/* ── ANIMATIONS ── */
+.rv{opacity:0;transform:translateY(20px);transition:opacity .6s ease,transform .6s ease;}
+.rv.in{opacity:1;transform:translateY(0);}
 
-    .product-img-wrap {
-      position: relative; aspect-ratio: 1/1; overflow: hidden;
-      background: var(--c2);
-    }
-    .product-img-wrap img {
-      width: 100%; height: 100%; object-fit: cover;
-      transition: transform 0.4s;
-    }
-    .product-card:hover .product-img-wrap img { transform: scale(1.04); }
-    .product-img-placeholder {
-      width: 100%; height: 100%;
-      display: flex; align-items: center; justify-content: center;
-    }
-    .product-img-placeholder svg { width: 60px; height: 60px; opacity: 0.25; }
-
-    .product-tags {
-      position: absolute; top: 12px; left: 12px;
-      display: flex; gap: 6px; flex-wrap: wrap;
-    }
-    .tag {
-      padding: 3px 8px; font-size: 0.62rem; font-weight: 700;
-      letter-spacing: 0.08em; text-transform: uppercase;
-    }
-    .tag-destacado { background: var(--gold); color: #000; }
-    .tag-cat { background: rgba(245,240,232,0.12); color: var(--sv); border: 1px solid rgba(245,240,232,0.15); }
-
-    .badge-stock {
-      position: absolute; top: 12px; right: 12px;
-      padding: 3px 8px; font-size: 0.6rem; font-weight: 700;
-      letter-spacing: 0.06em; text-transform: uppercase;
-    }
-    .badge-stock.in { background: rgba(74,222,128,0.15); color: #4ade80; border: 1px solid rgba(74,222,128,0.25); }
-    .badge-stock.low { background: rgba(251,146,60,0.15); color: #fb923c; border: 1px solid rgba(251,146,60,0.25); }
-
-    .product-info { padding: 18px 16px 20px; flex: 1; display: flex; flex-direction: column; }
-    .product-name { font-size: 0.95rem; font-weight: 600; color: var(--wh); margin-bottom: 5px; line-height: 1.3; }
-    .product-desc { font-size: 0.78rem; color: var(--gr); margin-bottom: 14px; flex: 1; line-height: 1.5; }
-    .product-footer { display: flex; align-items: center; justify-content: space-between; }
-    .product-price {
-      font-family: 'Playfair Display', serif;
-      font-size: 1.35rem; font-weight: 700; color: var(--gold);
-    }
-    .product-price .ars { font-family: 'Inter', sans-serif; font-size: 0.65rem; font-weight: 400; color: var(--gr); margin-right: 2px; }
-    .btn-comprar {
-      background: var(--gold); color: #000;
-      padding: 9px 18px; font-size: 0.72rem; font-weight: 700;
-      letter-spacing: 0.08em; text-transform: uppercase;
-      border: none; cursor: pointer; transition: background 0.2s;
-    }
-    .btn-comprar:hover { background: var(--gold2); }
-
-    .loading-grid { text-align: center; padding: 60px; color: var(--gr); }
-    .spinner {
-      width: 32px; height: 32px; border: 2px solid var(--br);
-      border-top-color: var(--gold); border-radius: 50%;
-      animation: spin 0.8s linear infinite; margin: 0 auto 16px;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* ── MODAL ── */
-    .modal-overlay {
-      position: fixed; inset: 0; z-index: 200;
-      background: rgba(10,8,6,0.85);
-      backdrop-filter: blur(6px);
-      display: none; align-items: center; justify-content: center;
-      padding: 20px;
-    }
-    .modal-overlay.open { display: flex; }
-    .modal {
-      background: var(--dk); border: 1px solid rgba(201,168,76,0.25);
-      width: 100%; max-width: 520px; max-height: 90vh;
-      overflow-y: auto; position: relative;
-    }
-    .modal-header {
-      padding: 24px 28px 20px;
-      border-bottom: 1px solid var(--br);
-      display: flex; align-items: center; justify-content: space-between;
-      position: sticky; top: 0; background: var(--dk); z-index: 2;
-    }
-    .modal-title {
-      font-family: 'Playfair Display', serif;
-      font-size: 1.1rem; font-weight: 700; color: var(--wh);
-    }
-    .modal-title span { color: var(--gold); }
-    .modal-close {
-      background: none; border: none; color: var(--gr);
-      font-size: 1.4rem; cursor: pointer; line-height: 1;
-      transition: color 0.2s;
-    }
-    .modal-close:hover { color: var(--wh); }
-    .modal-body { padding: 24px 28px; }
-
-    .modal-product-preview {
-      display: flex; gap: 14px; align-items: center;
-      background: var(--c1); border: 1px solid var(--br);
-      padding: 14px; margin-bottom: 24px;
-    }
-    .modal-product-img {
-      width: 64px; height: 64px; object-fit: cover; background: var(--c2);
-      flex-shrink: 0;
-    }
-    .modal-product-name { font-size: 0.9rem; font-weight: 600; color: var(--wh); margin-bottom: 4px; }
-    .modal-product-price { font-family: 'Playfair Display', serif; font-size: 1.1rem; color: var(--gold); }
-
-    .form-group { margin-bottom: 16px; }
-    .form-label { display: block; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gr); margin-bottom: 7px; }
-    .form-input, .form-select {
-      width: 100%; background: var(--c1); border: 1px solid var(--br);
-      color: var(--wh); padding: 11px 14px; font-family: 'Inter', sans-serif;
-      font-size: 0.88rem; font-weight: 300; outline: none;
-      transition: border-color 0.2s;
-      -webkit-appearance: none;
-    }
-    .form-input::placeholder { color: var(--gr); }
-    .form-input:focus, .form-select:focus { border-color: var(--gold); }
-    .form-select { cursor: pointer; }
-
-    .delivery-options { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
-    .delivery-option {
-      display: flex; align-items: center; gap: 12px;
-      background: var(--c1); border: 1px solid var(--br);
-      padding: 12px 14px; cursor: pointer; transition: border-color 0.2s;
-    }
-    .delivery-option:has(input:checked) { border-color: var(--gold); background: var(--gold-glow); }
-    .delivery-option input { accent-color: var(--gold); flex-shrink: 0; }
-    .delivery-option-label { font-size: 0.85rem; font-weight: 400; color: var(--wh); flex: 1; }
-    .delivery-option-label small { display: block; font-size: 0.72rem; color: var(--gr); margin-top: 2px; }
-    .delivery-option-badge { font-size: 0.68rem; font-weight: 700; color: var(--gold); letter-spacing: 0.05em; }
-
-    .address-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .address-suggestions {
-      position: absolute; top: 100%; left: 0; right: 0; z-index: 10;
-      background: var(--c2); border: 1px solid var(--br); border-top: none;
-      max-height: 180px; overflow-y: auto;
-    }
-    .address-suggestion-item {
-      padding: 9px 14px; font-size: 0.82rem; color: var(--sv); cursor: pointer;
-      border-bottom: 1px solid var(--br); transition: background 0.15s;
-    }
-    .address-suggestion-item:hover { background: var(--gold-glow); color: var(--gold); }
-    .address-wrap { position: relative; }
-
-    .modal-footer { padding: 0 28px 28px; }
-    .btn-pagar {
-      width: 100%; background: var(--gold); color: #000;
-      padding: 15px; font-size: 0.85rem; font-weight: 700;
-      letter-spacing: 0.1em; text-transform: uppercase;
-      border: none; cursor: pointer; transition: background 0.2s;
-      display: flex; align-items: center; justify-content: center; gap: 8px;
-    }
-    .btn-pagar:hover { background: var(--gold2); }
-    .btn-pagar:disabled { background: var(--gr); cursor: not-allowed; }
-    .btn-pagar .btn-loader { display: none; }
-    .btn-pagar.loading .btn-text { display: none; }
-    .btn-pagar.loading .btn-loader { display: block; }
-
-    /* ── FOOTER ── */
-    footer {
-      border-top: 1px solid var(--br);
-      background: var(--dk); padding: 48px 5vw 28px;
-    }
-    .footer-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 40px; margin-bottom: 40px; }
-    .footer-brand-name {
-      font-family: 'Playfair Display', serif;
-      font-size: 1.4rem; font-weight: 700; color: var(--wh); margin-bottom: 10px;
-    }
-    .footer-brand-name span { color: var(--gold); }
-    .footer-brand-desc { font-size: 0.82rem; color: var(--gr); line-height: 1.7; }
-    .footer-col h4 { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gold); margin-bottom: 14px; }
-    .footer-col ul { list-style: none; }
-    .footer-col ul li { margin-bottom: 8px; }
-    .footer-col ul li a { color: var(--gr); font-size: 0.82rem; text-decoration: none; transition: color 0.2s; }
-    .footer-col ul li a:hover { color: var(--gold); }
-    .footer-bottom { border-top: 1px solid var(--br); padding-top: 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: gap; gap: 12px; }
-    .footer-copy { font-size: 0.75rem; color: var(--gr); }
-    .footer-wa {
-      display: flex; align-items: center; gap: 8px;
-      background: rgba(37,211,102,0.1); border: 1px solid rgba(37,211,102,0.2);
-      color: #25D366; padding: 8px 16px; font-size: 0.75rem; font-weight: 600;
-      text-decoration: none; letter-spacing: 0.06em; text-transform: uppercase;
-      transition: background 0.2s;
-    }
-    .footer-wa:hover { background: rgba(37,211,102,0.2); }
-
-    /* ── MOBILE NAV ── */
-    .mobile-menu {
-      display: none; position: fixed; inset: 0; z-index: 150;
-      background: var(--bk); padding: 80px 5vw 40px;
-      flex-direction: column; gap: 24px;
-    }
-    .mobile-menu.open { display: flex; }
-    .mobile-menu a {
-      font-family: 'Playfair Display', serif;
-      font-size: 2rem; font-weight: 700; color: var(--wh); text-decoration: none;
-      border-bottom: 1px solid var(--br); padding-bottom: 16px;
-      transition: color 0.2s;
-    }
-    .mobile-menu a:hover { color: var(--gold); }
-
-    /* ── RESPONSIVE ── */
-    @media (max-width: 900px) {
-      .nav-links, .nav-cta { display: none; }
-      .hamburger { display: flex; }
-      .hero { flex-direction: column; gap: 40px; padding-top: 100px; text-align: center; min-height: auto; padding-bottom: 60px; }
-      .hero-subtitle { margin: 0 auto 40px; }
-      .hero-btns { justify-content: center; }
-      .hero-visual { width: 100%; }
-      .hero-illustration { width: 220px; height: 280px; }
-      .stats { grid-template-columns: repeat(2, 1fr); }
-      .stat { border-right: none; border-bottom: 1px solid var(--br); }
-      .stat:nth-child(odd) { border-right: 1px solid var(--br); }
-      .stat:nth-last-child(-n+2) { border-bottom: none; }
-      .footer-grid { grid-template-columns: 1fr; gap: 28px; }
-      .address-row { grid-template-columns: 1fr; }
-    }
-    @media (max-width: 560px) {
-      .products-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-      .modal { max-height: 100vh; }
-      .modal-overlay { padding: 0; align-items: flex-end; }
-      .section-header { flex-direction: column; align-items: flex-start; }
-    }
-  </style>
+/* ── RESPONSIVE ── */
+@media(max-width:900px){
+  nav{padding:12px 20px;}
+  .nm{display:none;flex-direction:column;position:fixed;top:68px;left:0;right:0;background:rgba(14,12,10,.98);padding:16px;gap:14px;border-bottom:1px solid var(--gold-border);}
+  .nm.open{display:flex;}
+  .hb{display:flex;}
+  .hero{flex-direction:column;padding:100px 20px 50px;text-align:center;}
+  .hr{display:none;}
+  .hdesc{margin:0 auto 14px;}
+  .hbtns{justify-content:center;}
+  .stats{padding:16px 20px;}
+  .sdv{display:none;}
+  .sec{padding:50px 20px;}
+  .wg{grid-template-columns:1fr 1fr;}
+  .cg{grid-template-columns:1fr;}
+  footer{padding:36px 20px 22px;}
+  .fr{grid-template-columns:1fr;}
+  .mb{padding:16px;}
+  .prod-grid{grid-template-columns:repeat(auto-fill,minmax(165px,1fr));}
+  .hero-line{display:none;}
+}
+</style>
 </head>
 <body>
 
-<!-- NAV -->
-<nav>
-  <a href="/" class="nav-logo">Arizona <span>Jeans</span></a>
-  <ul class="nav-links">
-    <li><a href="#coleccion">Colección</a></li>
-    <li><a href="#nosotros">Nosotros</a></li>
-    <li><a href="https://wa.me/5493512345678" target="_blank">Contacto</a></li>
-  </ul>
-  <a href="#coleccion" class="nav-cta">Ver Colección</a>
-  <button class="hamburger" id="hamburgerBtn" aria-label="Menú">
-    <span></span><span></span><span></span>
-  </button>
-</nav>
-
-<!-- MOBILE MENU -->
-<div class="mobile-menu" id="mobileMenu">
-  <a href="#coleccion" onclick="closeMobileMenu()">Colección</a>
-  <a href="#nosotros" onclick="closeMobileMenu()">Nosotros</a>
-  <a href="https://wa.me/5493512345678" target="_blank">WhatsApp</a>
+<!-- MODAL CHECKOUT -->
+<div class="mo" id="mo">
+  <div class="md">
+    <div class="mh">
+      <span class="mt">🛍️ Confirmar pedido</span>
+      <button class="mc" onclick="cerrar()">✕</button>
+    </div>
+    <div class="mb">
+      <div class="cp">
+        <div id="modal-img-wrap"><div class="cp-ico">👗</div></div>
+        <div style="flex:1;min-width:0">
+          <div class="cp-name" id="cp-name">Producto</div>
+          <div class="cp-det" id="cp-det"></div>
+        </div>
+        <div class="cp-pr">
+          <div class="cp-usd" id="cp-usd"></div>
+          <div class="cp-ars" id="cp-ars"></div>
+        </div>
+      </div>
+      <div class="fg"><label>Nombre completo *</label><input id="fn" type="text" placeholder="María García"></div>
+      <div class="fg"><label>Email *</label><input id="fe" type="email" placeholder="maria@gmail.com"></div>
+      <div class="fr">
+        <div class="fg"><label>WhatsApp</label><input id="ft" type="tel" placeholder="03564 123456"></div>
+        <div class="fg"><label>DNI</label><input id="fd" type="text" placeholder="32123456"></div>
+      </div>
+      <div class="fg">
+        <label>Dirección de entrega *</label>
+        <input id="fdir" type="text" placeholder="Av. San Martín 456, San José de la Dormida" autocomplete="off">
+        <input type="hidden" id="fdir-lat">
+        <input type="hidden" id="fdir-lng">
+        <input type="hidden" id="fdir-url">
+        <div id="fdir-status" style="font-size:.73rem;margin-top:4px;color:var(--gold);display:none;">📍 Dirección verificada</div>
+      </div>
+      <div class="dv"><span>Elegí cómo recibir tu pedido</span></div>
+      <div class="pos">
+        <label class="po sel" onclick="selPay(this,'mp')">
+          <input type="radio" name="pay" value="mp" checked>
+          <div class="po-ico">💙</div>
+          <div><div class="po-nm">MercadoPago</div><div class="po-ds">Tarjeta · débito · CVU · efectivo</div></div>
+        </label>
+        <label class="po" onclick="selPay(this,'retiro')">
+          <input type="radio" name="pay" value="retiro">
+          <div class="po-ico">🏪</div>
+          <div><div class="po-nm">Retiro en local</div><div class="po-ds">San José de la Dormida — sin costo</div></div>
+        </label>
+        <label class="po" onclick="selPay(this,'envio')">
+          <input type="radio" name="pay" value="envio">
+          <div class="po-ico">🚚</div>
+          <div><div class="po-nm">Envío al interior</div><div class="po-ds">Coordinar por WhatsApp</div></div>
+        </label>
+      </div>
+      <button class="pagar" id="pbtn" onclick="pagar()">
+        <div class="sp"></div>
+        <span id="ptxt">✨ Confirmar pedido</span>
+      </button>
+      <div class="mf">
+        <p>🔒 Pedido 100% seguro. Con MP serás redirigido a su plataforma.</p>
+        <div class="mpb">💙 Powered by MercadoPago</div>
+      </div>
+    </div>
+  </div>
 </div>
+
+<!-- NAV -->
+<nav id="nav">
+  <a href="#" class="nl">
+    <div class="nl-text">Arizona <span>Jeans</span></div>
+    <div class="nl-sub">San José de la Dormida · Córdoba</div>
+  </a>
+  <ul class="nm" id="nm">
+    <li><a href="#productos">Colección</a></li>
+    <li><a href="#contacto">Contacto</a></li>
+    <li><a href="https://wa.me/5493521410478" class="nc">WhatsApp</a></li>
+  </ul>
+  <div class="hb" onclick="document.getElementById('nm').classList.toggle('open')">
+    <span></span><span></span><span></span>
+  </div>
+</nav>
 
 <!-- HERO -->
 <section class="hero">
-  <div class="hero-content">
-    <div class="hero-badge">Nueva Colección 2025</div>
-    <h1 class="hero-title">
-      ARIZONA<br>
-      <span class="gold">JEANS</span>
-    </h1>
-    <p class="hero-subtitle">Moda con identidad. Desde San José de la Dormida para todo Córdoba.</p>
-    <div class="hero-btns">
-      <a href="#coleccion" class="btn-primary">Ver Colección</a>
-      <a href="https://wa.me/5493512345678" class="btn-outline" target="_blank">Contactar</a>
+  <div class="hero-bg"></div>
+  <div class="hero-line"></div>
+  <div class="hl">
+    <div class="hbadge">● Nueva Colección 2025</div>
+    <h1><span class="o">Moda</span><br>con <span class="g">Arizona</span><br><span class="o">Jeans</span></h1>
+    <p class="hdesc">Indumentaria con identidad. Desde San José de la Dormida para toda Córdoba.</p>
+    <p class="hloc">📍 San José de la Dormida · Córdoba · Argentina</p>
+    <div class="hbtns">
+      <a href="#productos" class="btn-gold">Ver Colección →</a>
+      <a href="https://wa.me/5493521410478?text=Hola Arizona Jeans! Quiero consultar" class="btn-outline">Consultar</a>
     </div>
   </div>
-  <div class="hero-visual">
-    <div class="hero-illustration">
-      <svg viewBox="0 0 320 420" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <!-- Coat hanger -->
-        <line x1="160" y1="40" x2="160" y2="70" stroke="#c9a84c" stroke-width="2.5" stroke-linecap="round"/>
-        <path d="M160 70 C160 70 80 110 40 160 C30 170 38 185 50 185 L270 185 C282 185 290 170 280 160 C240 110 160 70 160 70Z" stroke="#c9a84c" stroke-width="2" fill="none"/>
-        <circle cx="160" cy="36" r="8" stroke="#c9a84c" stroke-width="2" fill="none"/>
-        <!-- Jean body -->
-        <path d="M60 185 L65 280 Q68 300 72 320 L108 380 L120 380 L136 290 L160 260 L184 290 L200 380 L212 380 L248 320 Q252 300 255 280 L260 185 Z" stroke="#c9a84c" stroke-width="2" fill="rgba(201,168,76,0.07)"/>
-        <!-- Waistband -->
-        <rect x="60" y="182" width="200" height="22" rx="0" stroke="#c9a84c" stroke-width="1.5" fill="rgba(201,168,76,0.12)"/>
-        <!-- Belt loops -->
-        <rect x="80" y="178" width="8" height="30" rx="0" stroke="#c9a84c" stroke-width="1" fill="rgba(201,168,76,0.1)"/>
-        <rect x="154" y="178" width="8" height="30" rx="0" stroke="#c9a84c" stroke-width="1" fill="rgba(201,168,76,0.1)"/>
-        <rect x="228" y="178" width="8" height="30" rx="0" stroke="#c9a84c" stroke-width="1" fill="rgba(201,168,76,0.1)"/>
-        <!-- Center seam -->
-        <line x1="160" y1="204" x2="160" y2="262" stroke="#c9a84c" stroke-width="1" stroke-dasharray="4 3" opacity="0.6"/>
-        <!-- Pocket right -->
-        <path d="M200 205 Q218 205 222 220 L220 242 L198 242 Z" stroke="#c9a84c" stroke-width="1" fill="none" opacity="0.5"/>
-        <!-- Pocket left -->
-        <path d="M120 205 Q102 205 98 220 L100 242 L122 242 Z" stroke="#c9a84c" stroke-width="1" fill="none" opacity="0.5"/>
-        <!-- Decorative dots -->
-        <circle cx="160" cy="160" r="2" fill="#c9a84c" opacity="0.3"/>
-        <circle cx="130" cy="140" r="1.5" fill="#c9a84c" opacity="0.2"/>
-        <circle cx="190" cy="140" r="1.5" fill="#c9a84c" opacity="0.2"/>
-        <!-- Glow rings -->
-        <circle cx="160" cy="210" r="80" stroke="rgba(201,168,76,0.06)" stroke-width="1" fill="none"/>
-        <circle cx="160" cy="210" r="120" stroke="rgba(201,168,76,0.04)" stroke-width="1" fill="none"/>
-      </svg>
+  <div class="hr">
+    <div class="hr-inner">
+      <div class="hr-icon">👖</div>
+      <div class="hr-tag">Nueva Colección</div>
     </div>
   </div>
 </section>
 
-<!-- STATS BAR -->
+<!-- STATS -->
 <div class="stats">
-  <div class="stat"><span class="stat-value">+200</span><span class="stat-label">Prendas disponibles</span></div>
-  <div class="stat"><span class="stat-value">Cba</span><span class="stat-label">Envíos a toda la provincia</span></div>
-  <div class="stat"><span class="stat-value">48hs</span><span class="stat-label">Entrega garantizada</span></div>
-  <div class="stat"><span class="stat-value">5★</span><span class="stat-label">Valoración promedio</span></div>
+  <div class="st"><span class="sn">+200</span><span class="sl">Prendas disponibles</span></div>
+  <div class="sdv"></div>
+  <div class="st"><span class="sn">Córdoba</span><span class="sl">Envíos a toda la provincia</span></div>
+  <div class="sdv"></div>
+  <div class="st"><span class="sn">48hs</span><span class="sl">Entrega garantizada</span></div>
+  <div class="sdv"></div>
+  <div class="st"><span class="sn">5★</span><span class="sl">Valoración promedio</span></div>
+  <div class="sdv"></div>
+  <div class="st"><span class="sn">💙 MP</span><span class="sl">Pagos online</span></div>
 </div>
 
-<!-- PRODUCTS -->
-<section class="products-section" id="coleccion">
-  <div class="section-header">
-    <div>
-      <div class="section-label">Nuestra Colección</div>
-      <h2 class="section-title">Prendas Destacadas</h2>
-    </div>
-    <div class="filters" id="filtersContainer">
-      <button class="filter-btn active" data-cat="todos">Todos</button>
-      <button class="filter-btn" data-cat="Jeans">Jeans</button>
-      <button class="filter-btn" data-cat="Remeras">Remeras</button>
-      <button class="filter-btn" data-cat="Blazers">Blazers</button>
-      <button class="filter-btn" data-cat="Accesorios">Accesorios</button>
-      <button class="filter-btn" data-cat="Ofertas">Ofertas</button>
-    </div>
+<!-- PRODUCTOS -->
+<section class="sec" id="productos">
+  <div class="shd rv">
+    <div class="stag">Stock en tiempo real</div>
+    <h2 class="stitle">Nuestra <span>Colección</span></h2>
   </div>
-  <div class="products-grid" id="productsGrid">
-    <div class="loading-grid" style="grid-column:1/-1">
-      <div class="spinner"></div>
-      <div>Cargando colección…</div>
-    </div>
+  <div class="fts rv">
+    <button class="fb on" onclick="filtrar(this,'todos')">Todos</button>
+    <button class="fb" onclick="filtrar(this,'jeans')">👖 Jeans</button>
+    <button class="fb" onclick="filtrar(this,'remeras')">👕 Remeras</button>
+    <button class="fb" onclick="filtrar(this,'blazers')">🧥 Blazers</button>
+    <button class="fb" onclick="filtrar(this,'accesorios')">👜 Accesorios</button>
+    <button class="fb" onclick="filtrar(this,'ofertas')">🏷️ Ofertas</button>
+  </div>
+  <div class="prod-grid" id="prod-grid">
+    <div class="loading-state"><div class="spin"></div><p>Cargando colección...</p></div>
   </div>
 </section>
 
-<!-- NOSOTROS -->
-<section id="nosotros" style="padding:80px 5vw; border-top:1px solid var(--br); background:var(--dk);">
-  <div style="max-width:700px; margin:0 auto; text-align:center;">
-    <div class="section-label">Quiénes somos</div>
-    <h2 style="font-family:'Playfair Display',serif; font-size:2rem; font-weight:700; color:var(--wh); margin:12px 0 20px;">
-      Moda con raíces cordobesas
-    </h2>
-    <p style="color:var(--gr); font-size:0.95rem; line-height:1.8; margin-bottom:28px;">
-      Arizona Jeans nació en San José de la Dormida con una convicción simple: la moda de calidad no tiene por qué ser inalcanzable. 
-      Trabajamos con las mejores telas y terminaciones para ofrecerte prendas que duran, que quedan bien y que reflejan quién sos.
-    </p>
-    <a href="https://wa.me/5493512345678" class="btn-primary" target="_blank">Consultar por WhatsApp</a>
+<!-- POR QUÉ ELEGIRNOS -->
+<section class="sec" style="padding-top:0">
+  <div class="shd rv">
+    <div class="stag">Por qué elegirnos</div>
+    <h2 class="stitle">Calidad que se <span>siente</span></h2>
+  </div>
+  <div class="wg rv">
+    <div class="wc"><div class="wi">✂️</div><div class="wt">Calidad Premium</div><div class="wd">Telas seleccionadas y terminaciones de lujo en cada prenda.</div></div>
+    <div class="wc"><div class="wi">🚚</div><div class="wt">Envíos a Córdoba</div><div class="wd">Entrega rápida en 48hs a toda la provincia. Retiro sin cargo en el local.</div></div>
+    <div class="wc"><div class="wi">💙</div><div class="wt">Pago con MP</div><div class="wd">Pagá con tarjeta, CVU o efectivo directo desde la web.</div></div>
+    <div class="wc"><div class="wi">🔄</div><div class="wt">Cambios fáciles</div><div class="wd">¿No te quedó? Coordinamos el cambio sin complicaciones.</div></div>
+  </div>
+</section>
+
+<!-- CONTACTO -->
+<section class="sec" id="contacto">
+  <div class="shd rv">
+    <div class="stag">Estamos para vos</div>
+    <h2 class="stitle">Contacto & <span>local</span></h2>
+  </div>
+  <div class="cg rv">
+    <div class="cc">
+      <h3>Hablemos</h3>
+      <div class="cr"><div class="ci">📱</div><div class="ct"><strong>WhatsApp</strong><a href="https://wa.me/5493521410478">3564 123456</a></div></div>
+      <div class="cr"><div class="ci">📸</div><div class="ct"><strong>Instagram</strong><a href="https://instagram.com/arizonajeans.cba">@arizonajeans.cba</a></div></div>
+      <div class="cr"><div class="ci">📍</div><div class="ct"><strong>Local</strong><span>San José de la Dormida · Córdoba</span></div></div>
+      <div class="cr"><div class="ci">🕐</div><div class="ct"><strong>Horario</strong><span>Lun a Sáb · 9:00 a 20:00hs</span></div></div>
+      <a class="wa" href="https://wa.me/5493521410478?text=Hola Arizona Jeans! Quiero consultar">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        Escribir por WhatsApp
+      </a>
+      <div style="margin-top:14px">
+        <div style="font-size:.62rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--gr);margin-bottom:7px">Métodos de pago</div>
+        <div class="pbl">
+          <span class="pb">💙 MercadoPago</span>
+          <span class="pb">🏦 Transferencia</span>
+          <span class="pb">💵 Efectivo</span>
+        </div>
+      </div>
+    </div>
+    <div class="cc2">
+      <div class="ib"><div class="ig">@arizonajeans.cba</div><div class="sub">Instagram</div></div>
+      <div class="ib"><div class="num">3564 123456</div><div class="sub">WhatsApp directo</div></div>
+      <div class="ec">
+        <div style="font-size:1.8rem;margin-right:4px">🚚</div>
+        <div class="ec-t"><strong>Envíos a toda Córdoba</strong><span>Empaque seguro · Todos los correos</span></div>
+      </div>
+      <div class="ec">
+        <div style="font-size:1.8rem;margin-right:4px">🏪</div>
+        <div class="ec-t"><strong>Retiro sin costo</strong><span>San José de la Dormida · Lun–Sáb 9–20hs</span></div>
+      </div>
+    </div>
   </div>
 </section>
 
 <!-- FOOTER -->
 <footer>
-  <div class="footer-grid">
-    <div>
-      <div class="footer-brand-name">Arizona <span>Jeans</span></div>
-      <p class="footer-brand-desc">Moda con identidad.<br>San José de la Dormida, Córdoba, Argentina.</p>
+  <div class="ft">
+    <div class="fbb">
+      <div class="logo-f">Arizona <span>Jeans</span></div>
+      <div class="sub-f">Moda · San José de la Dormida</div>
+      <p>Indumentaria con identidad propia. Calidad y estilo para toda Córdoba.</p>
     </div>
-    <div class="footer-col">
-      <h4>Colección</h4>
-      <ul>
-        <li><a href="#coleccion">Jeans</a></li>
-        <li><a href="#coleccion">Remeras</a></li>
-        <li><a href="#coleccion">Blazers</a></li>
-        <li><a href="#coleccion">Accesorios</a></li>
-        <li><a href="#coleccion">Ofertas</a></li>
-      </ul>
-    </div>
-    <div class="footer-col">
-      <h4>Información</h4>
-      <ul>
-        <li><a href="#nosotros">Quiénes somos</a></li>
-        <li><a href="https://wa.me/5493512345678" target="_blank">Contacto</a></li>
-        <li><a href="#">Cambios y devoluciones</a></li>
-        <li><a href="#">Envíos</a></li>
-      </ul>
-    </div>
+    <div class="fc"><h5>Colección</h5><ul>
+      <li><a href="#productos">Jeans</a></li>
+      <li><a href="#productos">Remeras</a></li>
+      <li><a href="#productos">Blazers</a></li>
+      <li><a href="#productos">Accesorios</a></li>
+    </ul></div>
+    <div class="fc"><h5>Contacto</h5><ul>
+      <li><a href="https://wa.me/5493521410478">WA: 3564 123456</a></li>
+      <li><a href="https://instagram.com/arizonajeans.cba">@arizonajeans.cba</a></li>
+    </ul></div>
+    <div class="fc"><h5>Admin</h5><ul>
+      <li><a href="admin/">🔐 Panel admin</a></li>
+    </ul></div>
   </div>
-  <div class="footer-bottom">
-    <div class="footer-copy">© 2025 Arizona Jeans · San José de la Dormida, Córdoba</div>
-    <a href="https://wa.me/5493512345678" class="footer-wa" target="_blank">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-      WhatsApp
-    </a>
+  <div class="fb2">
+    <span class="copy">© 2026 Arizona Jeans · San José de la Dormida · Córdoba</span>
+    <span class="tgl">Moda que te <span>define</span></span>
   </div>
 </footer>
 
-<!-- MODAL DE COMPRA -->
-<div class="modal-overlay" id="modalOverlay">
-  <div class="modal">
-    <div class="modal-header">
-      <div class="modal-title">Arizona <span>Jeans</span> · Compra</div>
-      <button class="modal-close" id="modalClose">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="modal-product-preview" id="modalProductPreview">
-        <div class="product-img-placeholder modal-product-img" id="modalProductImgWrap">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:28px;height:28px;opacity:0.3"><path d="M7 21h10M12 3v4m0 0l-3-3m3 3l3-3M5 7h14l-1 12H6L5 7z"/></svg>
-        </div>
-        <div>
-          <div class="modal-product-name" id="modalProductName">—</div>
-          <div class="modal-product-price" id="modalProductPrice">—</div>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">Nombre completo *</label>
-        <input type="text" class="form-input" id="inputNombre" placeholder="Tu nombre completo" required>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Email *</label>
-        <input type="email" class="form-input" id="inputEmail" placeholder="tu@email.com" required>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Teléfono WhatsApp *</label>
-        <input type="tel" class="form-input" id="inputTelefono" placeholder="+54 351 000 0000" required>
-      </div>
-      <div class="form-group">
-        <label class="form-label">DNI *</label>
-        <input type="text" class="form-input" id="inputDni" placeholder="Sin puntos" required>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label" style="margin-bottom:10px;">Forma de entrega *</label>
-        <div class="delivery-options">
-          <label class="delivery-option">
-            <input type="radio" name="delivery" value="envio" id="deliveryEnvio">
-            <div class="delivery-option-label">
-              🏠 Envío a domicilio
-              <small>Córdoba capital y GBA · +$500 ARS</small>
-            </div>
-            <span class="delivery-option-badge">+$500</span>
-          </label>
-          <label class="delivery-option">
-            <input type="radio" name="delivery" value="retiro" id="deliveryRetiro" checked>
-            <div class="delivery-option-label">
-              🏪 Retiro en local
-              <small>San José de la Dormida · Sin costo</small>
-            </div>
-            <span class="delivery-option-badge" style="color:#4ade80">GRATIS</span>
-          </label>
-          <label class="delivery-option">
-            <input type="radio" name="delivery" value="interior" id="deliveryInterior">
-            <div class="delivery-option-label">
-              🚚 Envío al interior
-              <small>Coordinar por WhatsApp</small>
-            </div>
-            <span class="delivery-option-badge">WPP</span>
-          </label>
-        </div>
-      </div>
-
-      <div id="addressSection" style="display:none;">
-        <div class="form-group">
-          <label class="form-label">Dirección de entrega *</label>
-          <div class="address-wrap">
-            <input type="text" class="form-input" id="inputDireccion" placeholder="Escribí tu dirección…" autocomplete="off">
-            <div class="address-suggestions" id="addressSuggestions" style="display:none;"></div>
-          </div>
-        </div>
-        <div class="address-row">
-          <div class="form-group">
-            <label class="form-label">Ciudad</label>
-            <input type="text" class="form-input" id="inputCiudad" placeholder="Ciudad">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Provincia</label>
-            <input type="text" class="form-input" id="inputProvincia" placeholder="Córdoba">
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="modal-footer">
-      <button class="btn-pagar" id="btnPagar">
-        <span class="btn-text">Pagar con MercadoPago</span>
-        <span class="btn-loader">
-          <svg width="20" height="20" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2.5" style="animation:spin 0.8s linear infinite"><circle cx="12" cy="12" r="9" stroke-opacity="0.3"/><path d="M12 3a9 9 0 019 9"/></svg>
-        </span>
-      </button>
-    </div>
-  </div>
-</div>
-
-<!-- FIREBASE + LOGIC -->
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getFirestore, collection, query, where, getDocs, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js';
+import { getFirestore, collection, getDocs, query } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js';
 
-  const firebaseConfig = {
-    apiKey: "FIREBASE_API_KEY",
-    authDomain: "arizona-jeans.firebaseapp.com",
-    projectId: "arizona-jeans",
-    storageBucket: "arizona-jeans.appspot.com",
-    messagingSenderId: "SENDER_ID",
-    appId: "APP_ID"
-  };
+// ══ PEGÁ TUS CREDENCIALES FIREBASE ACÁ ══
+const firebaseConfig = {
+  apiKey: "AIzaSyCbH_m-ciMujL09xqPkCBkfM3RLO6Xq7JY",
+  authDomain: "arizona-jeans.firebaseapp.com",
+  projectId: "arizona-jeans",
+  storageBucket: "arizona-jeans.firebasestorage.app",
+  messagingSenderId: "913791532671",
+  appId: "1:913791532671:web:dfe9c6eeece2b6bffac94a"
+};
+// ════════════════════════════════════════
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+const TC = 10; // Tipo de cambio USD-ARS (actualizar según convenga)
+let todos = [];
 
-  const TC = 1300;
-  let allProducts = [];
-  let currentProduct = null;
-  let currentFilter = 'todos';
+const catIco = cat => ({jeans:'👖',remeras:'👕',blazers:'🧥',accesorios:'👜',ofertas:'🏷️'}[cat]||'👗');
 
-  // ── LOAD PRODUCTS ──
-  async function loadProducts() {
-    try {
-      const q = query(collection(db, "productos"), where("visible", "==", true));
-      const snap = await getDocs(q);
-      allProducts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      renderProducts(allProducts);
-    } catch (e) {
-      document.getElementById('productsGrid').innerHTML =
-        `<div class="loading-grid" style="grid-column:1/-1">
-          <p style="color:var(--gr)">Cargando productos de demostración…</p>
-        </div>`;
-      loadDemoProducts();
-    }
+async function cargar() {
+  const grid = document.getElementById('prod-grid');
+  try {
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const snap = await getDocs(query(collection(db,'productos')));
+    todos = snap.docs
+      .map(d => ({id:d.id,...d.data()}))
+      .filter(p => p.visible !== false)
+      .sort((a,b) => (a.orden||99) - (b.orden||99));
+    render(todos);
+  } catch(e) {
+    grid.innerHTML = `<div class="empty-state">
+      <p style="font-size:2.5rem;margin-bottom:14px">🧵</p>
+      <p style="font-weight:600;margin-bottom:8px">Configurá Firebase para ver los productos</p>
+      <p style="font-size:.78rem;color:#666">Seguí los pasos del README.md</p>
+    </div>`;
   }
+}
 
-  function loadDemoProducts() {
-    allProducts = [
-      { id: 'd1', nombre: 'Mom Jean Classic', precio: 35, descripcion: 'Talle M · Azul oscuro · 98% algodón', categoria: 'Jeans', imagen: '', destacado: true, stock: true },
-      { id: 'd2', nombre: 'Cargo Beige', precio: 42, descripcion: 'Talle L · Beige · 100% algodón', categoria: 'Jeans', imagen: '', destacado: false, stock: true },
-      { id: 'd3', nombre: 'Blazer Oversize Negro', precio: 55, descripcion: 'Talle M · Negro · Paño premium', categoria: 'Blazers', imagen: '', destacado: true, stock: true },
-      { id: 'd4', nombre: 'Remera Crop Básica', precio: 18, descripcion: 'Talle S/M/L · Blanco/Negro', categoria: 'Remeras', imagen: '', destacado: false, stock: true },
-      { id: 'd5', nombre: 'Cinturón Cuero Dorado', precio: 22, descripcion: 'Talle único · Hebilla dorada', categoria: 'Accesorios', imagen: '', destacado: false, stock: false },
-      { id: 'd6', nombre: 'Jean Skinny Oferta', precio: 28, descripcion: 'Talle XS/S · Negro · ¡Liquidación!', categoria: 'Ofertas', imagen: '', destacado: true, stock: true },
-    ];
-    renderProducts(allProducts);
+function render(lista) {
+  const grid = document.getElementById('prod-grid');
+  if (!lista.length) {
+    grid.innerHTML = '<div class="empty-state"><p style="font-size:2.5rem;margin-bottom:14px">👗</p><p>No hay prendas en esta categoría.</p></div>';
+    return;
   }
+  grid.innerHTML = lista.map(p => {
+    const nm = (p.nombre||'').replace(/'/g,"&#39;");
+    const sp = (p.descripcion||'').replace(/'/g,"&#39;");
+    const im = (p.imagen||'');
+    const ca = (p.categoria||'');
+    const pr = p.precio||0;
+    const imgEl = p.imagen ? `<img src="${p.imagen}" alt="${p.nombre}" loading="lazy">` : `<div class="prod-img-placeholder">${catIco(ca)}</div>`;
+    return `<div class="prod-card">
+      <div class="prod-img">${imgEl}</div>
+      <div class="prod-body">
+        <div class="prod-tags">
+          ${p.destacado ? '<span class="tag tag-dest">⭐ Destacado</span>' : ''}
+          <span class="tag tag-cat">${ca||'Prenda'}</span>
+          ${p.stock ? '<span class="tag tag-s">✓ Stock</span>' : '<span class="tag tag-u">⚠ Últimas</span>'}
+        </div>
+        <div class="prod-name">${p.nombre||''}</div>
+        <div class="prod-spec">${p.descripcion||''}</div>
+        ${p.talle ? `<div class="prod-talle">📏 Talle: ${p.talle}</div>` : ''}
+        ${p.color ? `<div class="prod-spec" style="color:var(--gold);font-size:.67rem;">🎨 ${p.color}</div>` : ''}
+        ${p.nota ? `<div class="prod-nota">⚠️ ${p.nota}</div>` : ''}
+        <div class="prod-footer">
+          <div class="prod-price"><span class="u">$ </span>${Number(pr).toLocaleString('es-AR')}</div>
+          <button class="prod-btn" onclick="window.abrirModal('${nm}',${pr},'${sp}','${im}','${ca}')">🛒 Comprar</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
 
-  function renderProducts(products) {
-    const grid = document.getElementById('productsGrid');
-    if (!products.length) {
-      grid.innerHTML = `<div class="loading-grid" style="grid-column:1/-1"><p style="color:var(--gr)">No hay productos en esta categoría.</p></div>`;
-      return;
-    }
-    grid.innerHTML = products.map(p => {
-      const ars = (p.precio * TC).toLocaleString('es-AR');
-      const imgHtml = p.imagen
-        ? `<img src="${p.imagen}" alt="${p.nombre}" loading="lazy">`
-        : `<div class="product-img-placeholder"><svg viewBox="0 0 24 24" fill="none" stroke="#c9a84c" stroke-width="1.2"><path d="M7 21h10M12 3v4m0 0l-3-3m3 3l3-3M5 7h14l-1 12H6L5 7z"/></svg></div>`;
-      return `
-        <div class="product-card" data-id="${p.id}">
-          <div class="product-img-wrap">
-            ${imgHtml}
-            <div class="product-tags">
-              ${p.destacado ? `<span class="tag tag-destacado">Destacado</span>` : ''}
-              <span class="tag tag-cat">${p.categoria}</span>
-            </div>
-            <span class="badge-stock ${p.stock ? 'in' : 'low'}">${p.stock ? 'En stock' : 'Últimas unidades'}</span>
-          </div>
-          <div class="product-info">
-            <div class="product-name">${p.nombre}</div>
-            <div class="product-desc">${p.descripcion}</div>
-            <div class="product-footer">
-              <div class="product-price"><span class="ars">ARS</span>${ars}</div>
-              <button class="btn-comprar" onclick="openModal('${p.id}')">Comprar</button>
-            </div>
-          </div>
-        </div>`;
-    }).join('');
+window.filtrar = function(btn, cat) {
+  document.querySelectorAll('.fb').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  let f = todos;
+  if (cat!=='todos') f = todos.filter(p=>p.categoria===cat);
+  render(f);
+};
+
+cargar();
+
+// ── CHECKOUT ──
+let P = {};
+window.abrirModal = function(nm, pr, det, img, cat) {
+  P = {nm,pr,det,img,cat};
+  document.getElementById('cp-name').textContent = nm;
+  document.getElementById('cp-det').textContent = det||'';
+  document.getElementById('cp-usd').textContent = '$ ' + Number(pr).toLocaleString('es-AR');
+  document.getElementById('cp-ars').textContent = '≈ USD ' + Math.round(pr/TC);
+  const w = document.getElementById('modal-img-wrap');
+  w.innerHTML = img ? `<img class="cp-img" src="${img}" alt="${nm}">` : `<div class="cp-ico">${catIco(cat)}</div>`;
+  document.getElementById('mo').classList.add('open');
+  document.body.style.overflow='hidden';
+};
+
+window.cerrar = function() {
+  document.getElementById('mo').classList.remove('open');
+  document.body.style.overflow='';
+};
+
+document.getElementById('mo').addEventListener('click', function(e){
+  if(e.target===this) window.cerrar();
+});
+
+window.selPay = function(lbl, val) {
+  document.querySelectorAll('.po').forEach(l=>l.classList.remove('sel'));
+  lbl.classList.add('sel');
+};
+
+window.pagar = async function() {
+  const fn=document.getElementById('fn').value.trim();
+  const fe=document.getElementById('fe').value.trim();
+  const ft=document.getElementById('ft').value.trim();
+  const met=document.querySelector('input[name="pay"]:checked')?.value;
+  if(!fn||!fe){alert('Completá nombre y email.');return;}
+  if(!fe.includes('@')){alert('Email inválido.');return;}
+  const btn=document.getElementById('pbtn'), txt=document.getElementById('ptxt');
+  if(met!=='mp'){
+    const msg=`Hola Arizona Jeans!\nQuiero comprar: ${P.nm}\nDescripción: ${P.det}\nPrecio: $${Number(P.pr).toLocaleString('es-AR')}\nNombre: ${fn}\nEmail: ${fe}\nTel: ${ft}\nMétodo: ${met==='retiro'?'Retiro en local':'Envío al interior'}`;
+    window.open('https://wa.me/5493521410478?text='+encodeURIComponent(msg));
+    window.cerrar(); return;
   }
+  btn.disabled=true; btn.classList.add('loading'); txt.textContent='Procesando...';
+  try {
+    const fdir=document.getElementById('fdir').value.trim();
+    const fdirUrl=document.getElementById('fdir-url').value;
+    if(!fdir){alert('Por favor ingresá la dirección de entrega.');btn.disabled=false;btn.classList.remove('loading');txt.textContent='✨ Confirmar pedido';return;}
+    const res=await fetch('/api/crear-pago',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({producto:P.nm,precio:P.pr,cantidad:1,comprador:{nombre:fn,email:fe,tel:ft,dni:document.getElementById('fd').value.trim(),direccion:fdir,direccionUrl:fdirUrl}})});
+    const data=await res.json();
+    if(data.init_point) window.location.href=data.init_point;
+    else throw new Error();
+  } catch {
+    const msg=`Hola Arizona Jeans!\nQuiero pagar con MP: ${P.nm}\nNombre: ${fn}\nEmail: ${fe}`;
+    if(confirm('Error con MercadoPago. ¿Continuar por WhatsApp?')) window.open('https://wa.me/5493521410478?text='+encodeURIComponent(msg));
+  } finally {
+    btn.disabled=false; btn.classList.remove('loading'); txt.textContent='✨ Confirmar pedido';
+  }
+};
 
-  // ── FILTERS ──
-  document.querySelectorAll('.filter-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      const cat = btn.dataset.cat;
-      currentFilter = cat;
-      const filtered = cat === 'todos' ? allProducts : allProducts.filter(p => p.categoria === cat);
-      renderProducts(filtered);
+// ── SCROLL ANIMATIONS ──
+const obs=new IntersectionObserver(e=>{e.forEach(x=>{if(x.isIntersecting){x.target.classList.add('in');obs.unobserve(x.target);}});},{threshold:.07});
+document.querySelectorAll('.rv').forEach(el=>obs.observe(el));
+window.addEventListener('scroll',()=>{document.getElementById('nav').style.boxShadow=window.scrollY>50?'0 2px 24px rgba(0,0,0,.4)':'none';});
+</script>
+
+<!-- Autocompletado dirección con Nominatim -->
+<style>
+#nominatim-list{position:absolute;z-index:9999;background:#1a1714;border:1px solid var(--gold-border);margin-top:2px;width:100%;max-height:220px;overflow-y:auto;display:none;font-family:'Inter',sans-serif;}
+#nominatim-list li{list-style:none;padding:8px 13px;color:#ccc;cursor:pointer;font-size:.82rem;border-bottom:1px solid rgba(201,168,76,0.1);}
+#nominatim-list li:hover,#nominatim-list li.active{background:#252019;color:var(--gold);}
+#fdir-wrap{position:relative;}
+</style>
+<script>
+(function(){
+  const DEBOUNCE=400;
+  let timer=null,lastQ='',abortCtrl=null;
+  function init(){
+    const input=document.getElementById('fdir');
+    if(!input)return;
+    const wrap=document.createElement('div');
+    wrap.id='fdir-wrap';
+    input.parentNode.insertBefore(wrap,input);
+    wrap.appendChild(input);
+    const list=document.createElement('ul');
+    list.id='nominatim-list';
+    wrap.appendChild(list);
+    input.addEventListener('input',()=>{
+      const q=input.value.trim();
+      clearTimeout(timer);
+      resetHidden();
+      if(q.length<3){list.style.display='none';return;}
+      if(q===lastQ)return;
+      timer=setTimeout(()=>buscar(q,input,list),DEBOUNCE);
     });
-  });
-
-  // ── MODAL ──
-  window.openModal = function(id) {
-    currentProduct = allProducts.find(p => p.id === id);
-    if (!currentProduct) return;
-    const ars = (currentProduct.precio * TC).toLocaleString('es-AR');
-    document.getElementById('modalProductName').textContent = currentProduct.nombre;
-    document.getElementById('modalProductPrice').textContent = `ARS ${ars}`;
-    const imgWrap = document.getElementById('modalProductImgWrap');
-    if (currentProduct.imagen) {
-      imgWrap.innerHTML = `<img src="${currentProduct.imagen}" alt="${currentProduct.nombre}" class="modal-product-img" style="width:64px;height:64px;object-fit:cover;">`;
-    }
-    document.getElementById('modalOverlay').classList.add('open');
-    document.body.style.overflow = 'hidden';
-  };
-
-  document.getElementById('modalClose').addEventListener('click', closeModal);
-  document.getElementById('modalOverlay').addEventListener('click', e => {
-    if (e.target === document.getElementById('modalOverlay')) closeModal();
-  });
-
-  function closeModal() {
-    document.getElementById('modalOverlay').classList.remove('open');
-    document.body.style.overflow = '';
-  }
-
-  // ── DELIVERY TOGGLE ──
-  document.querySelectorAll('input[name="delivery"]').forEach(radio => {
-    radio.addEventListener('change', () => {
-      const sec = document.getElementById('addressSection');
-      sec.style.display = radio.value === 'envio' ? 'block' : 'none';
+    input.addEventListener('keydown',e=>{
+      const items=list.querySelectorAll('li');
+      const active=list.querySelector('li.active');
+      if(e.key==='ArrowDown'){e.preventDefault();const n=active?active.nextElementSibling:items[0];if(n){active&&active.classList.remove('active');n.classList.add('active');}}
+      else if(e.key==='ArrowUp'){e.preventDefault();const p=active?active.previousElementSibling:null;if(p){active.classList.remove('active');p.classList.add('active');}}
+      else if(e.key==='Enter'&&active){e.preventDefault();active.click();}
+      else if(e.key==='Escape'){list.style.display='none';}
     });
-  });
-
-  // ── ADDRESS AUTOCOMPLETE ──
-  let addressTimeout;
-  document.getElementById('inputDireccion').addEventListener('input', function() {
-    clearTimeout(addressTimeout);
-    const val = this.value.trim();
-    if (val.length < 4) { document.getElementById('addressSuggestions').style.display = 'none'; return; }
-    addressTimeout = setTimeout(() => fetchAddresses(val), 400);
-  });
-
-  async function fetchAddresses(q) {
-    try {
-      const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q + ', Córdoba, Argentina')}&format=json&limit=5&countrycodes=ar`);
-      const data = await res.json();
-      const box = document.getElementById('addressSuggestions');
-      if (!data.length) { box.style.display = 'none'; return; }
-      box.innerHTML = data.map(r => `<div class="address-suggestion-item" data-display="${r.display_name}">${r.display_name}</div>`).join('');
-      box.style.display = 'block';
-      box.querySelectorAll('.address-suggestion-item').forEach(item => {
-        item.addEventListener('click', () => {
-          document.getElementById('inputDireccion').value = item.dataset.display.split(',')[0];
-          box.style.display = 'none';
+    document.addEventListener('click',e=>{if(!wrap.contains(e.target))list.style.display='none';});
+  }
+  function buscar(q,input,list){
+    lastQ=q;
+    if(abortCtrl)abortCtrl.abort();
+    abortCtrl=new AbortController();
+    const url='https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=5&countrycodes=ar&q='+encodeURIComponent(q);
+    fetch(url,{signal:abortCtrl.signal,headers:{'Accept-Language':'es'}})
+      .then(r=>r.json())
+      .then(data=>{
+        list.innerHTML='';
+        if(!data.length){list.style.display='none';return;}
+        data.forEach(item=>{
+          const li=document.createElement('li');
+          li.textContent=item.display_name;
+          li.addEventListener('click',()=>{
+            input.value=item.display_name;
+            const lat=parseFloat(item.lat),lng=parseFloat(item.lon);
+            const mapsUrl='https://www.google.com/maps/search/?api=1&query='+lat+','+lng;
+            document.getElementById('fdir-lat').value=lat;
+            document.getElementById('fdir-lng').value=lng;
+            document.getElementById('fdir-url').value=mapsUrl;
+            const st=document.getElementById('fdir-status');
+            st.style.display='block';
+            st.textContent='📍 '+item.display_name;
+            list.style.display='none';
+            lastQ=item.display_name;
+          });
+          list.appendChild(li);
         });
-      });
-    } catch {}
+        list.style.display='block';
+      })
+      .catch(()=>{});
   }
-
-  // ── PAY ──
-  document.getElementById('btnPagar').addEventListener('click', async () => {
-    if (!currentProduct) return;
-    const nombre = document.getElementById('inputNombre').value.trim();
-    const email = document.getElementById('inputEmail').value.trim();
-    const telefono = document.getElementById('inputTelefono').value.trim();
-    const dni = document.getElementById('inputDni').value.trim();
-    const delivery = document.querySelector('input[name="delivery"]:checked')?.value;
-
-    if (!nombre || !email || !telefono || !dni) {
-      alert('Por favor completá todos los campos obligatorios.');
-      return;
-    }
-
-    const btn = document.getElementById('btnPagar');
-    btn.classList.add('loading');
-    btn.disabled = true;
-
-    try {
-      const res = await fetch('/api/crear-preferencia', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          producto: {
-            nombre: currentProduct.nombre,
-            precio: currentProduct.precio,
-            id: currentProduct.id,
-            categoria: currentProduct.categoria
-          },
-          comprador: { nombre, email, telefono, dni },
-          entrega: {
-            tipo: delivery,
-            direccion: delivery === 'envio' ? document.getElementById('inputDireccion').value : 'Retiro en local / Interior',
-            ciudad: document.getElementById('inputCiudad')?.value || '',
-            provincia: document.getElementById('inputProvincia')?.value || ''
-          }
-        })
-      });
-      const data = await res.json();
-      if (data.init_point) {
-        window.location.href = data.init_point;
-      } else {
-        throw new Error('No se recibió init_point');
-      }
-    } catch (err) {
-      alert('Error al procesar el pago. Por favor intentá de nuevo.');
-      btn.classList.remove('loading');
-      btn.disabled = false;
-    }
-  });
-
-  // ── MOBILE MENU ──
-  document.getElementById('hamburgerBtn').addEventListener('click', () => {
-    document.getElementById('mobileMenu').classList.toggle('open');
-  });
-  window.closeMobileMenu = () => document.getElementById('mobileMenu').classList.remove('open');
-
-  loadProducts();
+  function resetHidden(){
+    document.getElementById('fdir-lat').value='';
+    document.getElementById('fdir-lng').value='';
+    document.getElementById('fdir-url').value='';
+    document.getElementById('fdir-status').style.display='none';
+  }
+  if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',init);}
+  else{init();}
+})();
 </script>
 </body>
 </html>
