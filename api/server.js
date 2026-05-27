@@ -1,208 +1,669 @@
-const express = require('express');
-const cors = require('cors');
-const nodemailer = require('nodemailer');
-const path = require('path');
+const express = require("express");
+const cors = require("cors");
+const nodemailer = require("nodemailer");
+const { MercadoPagoConfig, Preference, Payment } = require("mercadopago");
 
 const app = express();
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, '../public')));
+app.use(express.static("public"));
 
-// ═══════════════════════════════════════════
-// CONFIGURACIÓN — completar con tus variables
-// ═══════════════════════════════════════════
-const MP_ACCESS_TOKEN = process.env.MP_ACCESS_TOKEN || '';
-const BASE_URL        = process.env.BASE_URL        || 'http://localhost:3000';
-const GMAIL_USER      = process.env.GMAIL_USER      || '';
-const GMAIL_APP_PASS  = process.env.GMAIL_APP_PASSWORD || '';
-const ADMIN_EMAIL     = process.env.ADMIN_EMAIL     || '';
-const WA_NUMBER       = '5493521410478'; // ← reemplazar con el número real
+// ── MercadoPago ──
+const client = new MercadoPagoConfig({
+  accessToken: process.env.MP_ACCESS_TOKEN || "",
+});
+const preference = new Preference(client);
+const payment = new Payment(client);
 
-// ── MERCADOPAGO ──────────────────────────────
-let mpClient = null;
-(async () => {
-  if (!MP_ACCESS_TOKEN) return;
-  try {
-    const { MercadoPagoConfig, Preference } = require('mercadopago');
-    mpClient = new MercadoPagoConfig({ accessToken: MP_ACCESS_TOKEN });
-    console.log('[AZ] MercadoPago inicializado ✓');
-  } catch (e) {
-    console.warn('[AZ] MercadoPago no disponible:', e.message);
-  }
-})();
+// ── Config ──
+const GMAIL_USER          = process.env.GMAIL_USER;          // tu-email@gmail.com
+const GMAIL_APP_PASSWORD  = process.env.GMAIL_APP_PASSWORD;  // contraseña de aplicación de Google
+const ADMIN_EMAIL         = process.env.ADMIN_EMAIL || "arizonajeanstienda@gmail.com";
+const BASE_URL            = process.env.BASE_URL || "https://arizonajeans.vercel.app";
+const FIREBASE_PROJECT_ID = process.env.FIREBASE_PROJECT_ID;
+const FIREBASE_API_KEY    = process.env.FIREBASE_API_KEY;
 
-// ── NODEMAILER ───────────────────────────────
-function createTransport() {
-  if (!GMAIL_USER || !GMAIL_APP_PASS) return null;
+// ── Transporter Nodemailer (Gmail) ──
+function crearTransporter() {
   return nodemailer.createTransport({
-    service: 'gmail',
-    auth: { user: GMAIL_USER, pass: GMAIL_APP_PASS }
+    service: "gmail",
+    auth: {
+      user: GMAIL_USER,
+      pass: GMAIL_APP_PASSWORD,
+    },
   });
 }
 
-// ── EMAIL CLIENTE ────────────────────────────
-function htmlCliente({ nombre, producto, precio, metodo, direccion }) {
+// ── Guardar pedido en Firestore (REST API, sin SDK) ──
+async function guardarPedido(preferenceId, datos) {
+  if (!FIREBASE_PROJECT_ID || !FIREBASE_API_KEY) return;
+  try {
+    console.log("💾 Guardando pedido. ID:", preferenceId, "| email:", datos.email, "| nombre:", datos.nombre);
+    const url = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents/pedidos/${preferenceId}?key=${FIREBASE_API_KEY}`;
+    const res = await fetch(url, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        fields: {
+          nombre:       { stringValue: datos.nombre    || "" },
+          email:        { stringValue: datos.email     || "" },
+          telefono:     { stringValue: datos.tel       || "" },
+          dni:          { stringValue: datos.dni       || "" },
+          direccion:    { stringValue: datos.direccion || "" },
+          direccionUrl: { stringValue: datos.direccionUrl || "" },
+          producto:     { stringValue: datos.producto  || "" },
+          precioUSD:    { stringValue: String(datos.precioUSD || 0) },
+          createdAt:    { stringValue: new Date().toISOString() },
+          emailEnviado: { booleanValue: false },
+        },
+      }),
+    });
+    if (!res.ok) {
+      const errorBody = await res.text();
+      console.error("❌ Firestore rechazó el pedido. Status:", res.status, "| Error:", errorBody);
+    } else {
+      console.log("✅ Pedido guardado OK en Firestore:", preferenceId);
+    }
+  } catch (err) {
+    console.error("Error guardando pedido:", err);
+  }
+}
+
+// ── Deduplicación atómica por payment.id ──
+// Intenta crear el documento. Si ya existe (HTTP 409) → ya fue procesado → devuelve false.
+// Firestore garantiza atomicidad: solo una escritura gana aunque lleguen 2 webhooks a la vez.
+async function registrarPagoUnico(paymentId) {
+  if (!FIREBASE_PROJECT_ID || !FIREBASE_API_KEY || !paymentId) return true; // sin Firebase, dejar pasar
+  try {
+    const url = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents/pagos_procesados?documentId=${paymentId}&key=${FIREBASE_API_KEY}`;
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ fields: { procesadoEn: { stringValue: new Date().toISOString() } } }),
+    });
+    if (res.status === 409) {
+      console.log("⏩ Payment", paymentId, "ya procesado (409) — ignorando duplicado");
+      return false; // ya existe, no procesar
+    }
+    console.log("🔑 Payment", paymentId, "registrado como nuevo");
+    return true; // nuevo, procesar
+  } catch (err) {
+    console.error("Error en registrarPagoUnico:", err);
+    return true; // ante error, dejar pasar para no perder ventas
+  }
+}
+
+// ── Leer pedido de Firestore ──
+async function leerPedido(preferenceId) {
+  if (!FIREBASE_PROJECT_ID || !FIREBASE_API_KEY || !preferenceId) return null;
+  try {
+    const url = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents/pedidos/${preferenceId}?key=${FIREBASE_API_KEY}`;
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (!data.fields) return null;
+    return {
+      nombre:       data.fields.nombre?.stringValue       || "",
+      email:        data.fields.email?.stringValue        || "",
+      telefono:     data.fields.telefono?.stringValue     || "",
+      dni:          data.fields.dni?.stringValue          || "",
+      direccion:    data.fields.direccion?.stringValue    || "",
+      direccionUrl: data.fields.direccionUrl?.stringValue || "",
+      producto:     data.fields.producto?.stringValue     || "",
+      precioUSD:    Number(data.fields.precioUSD?.stringValue || data.fields.precioUSD?.integerValue || 0),
+      emailEnviado: data.fields.emailEnviado?.booleanValue ?? false,
+    };
+  } catch (err) {
+    console.error("Error leyendo pedido:", err);
+    return null;
+  }
+}
+
+// ── Enviar email con Nodemailer ──
+async function enviarEmail({ to, subject, html }) {
+  if (!GMAIL_USER || !GMAIL_APP_PASSWORD) {
+    console.warn("⚠️ Sin GMAIL_USER o GMAIL_APP_PASSWORD — email no enviado");
+    return;
+  }
+  try {
+    const transporter = crearTransporter();
+    const info = await transporter.sendMail({
+      from: `"Arizona Jeans" <${GMAIL_USER}>`,
+      to,
+      subject,
+      html,
+    });
+    console.log("📧 Email enviado OK:", info.messageId);
+    console.log("📧 Respuesta SMTP:", JSON.stringify(info.response));
+    console.log("📧 Rechazados:", JSON.stringify(info.rejected));
+    console.log("📧 Aceptados:", JSON.stringify(info.accepted));
+    return info;
+  } catch (err) {
+    console.error("❌ Error enviando email:", err.message);
+    console.error("❌ Error completo:", JSON.stringify(err));
+  }
+}
+
+// ── Template CLIENTE ──
+function templateCliente({ nombre, producto, precio, referencia }) {
+  const fecha = new Date().toLocaleDateString("es-AR", {
+    day: "numeric", month: "long", year: "numeric",
+    hour: "2-digit", minute: "2-digit", timeZone: "America/Argentina/Cordoba",
+  });
   return `<!DOCTYPE html>
 <html lang="es">
-<head><meta charset="UTF-8"><style>
-body{font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;background:#f4f0e8;margin:0;padding:0;}
-.wrap{max-width:560px;margin:32px auto;background:#0e0c0a;border:1px solid rgba(201,168,76,0.3);}
-.header{background:#c9a84c;padding:28px 32px;text-align:center;}
-.header h1{margin:0;color:#000;font-size:1.4rem;letter-spacing:.06em;text-transform:uppercase;}
-.header p{margin:4px 0 0;color:#4a3800;font-size:.78rem;letter-spacing:.1em;}
-.body{padding:28px 32px;color:#f5f0e8;}
-.body h2{font-size:1.1rem;color:#c9a84c;margin-bottom:16px;border-bottom:1px solid rgba(201,168,76,0.2);padding-bottom:10px;}
-.row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:.85rem;}
-.row .label{color:#9a9085;}
-.row .value{color:#f5f0e8;font-weight:600;}
-.footer{background:#141210;padding:18px 32px;text-align:center;color:#9a9085;font-size:.72rem;border-top:1px solid rgba(201,168,76,0.15);}
-.btn{display:inline-block;margin-top:18px;padding:12px 28px;background:#25D366;color:#fff;text-decoration:none;font-weight:700;font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;}
-</style></head>
-<body>
-<div class="wrap">
-  <div class="header">
-    <h1>Arizona Jeans</h1>
-    <p>Moda · San José de la Dormida · Córdoba</p>
-  </div>
-  <div class="body">
-    <h2>✨ ¡Pedido recibido, ${nombre}!</h2>
-    <p style="color:#9a9085;font-size:.85rem;margin-bottom:18px;">Nos contactamos en menos de 24hs para coordinar la entrega.</p>
-    <div class="row"><span class="label">Prenda</span><span class="value">${producto}</span></div>
-    <div class="row"><span class="label">Precio</span><span class="value">$${Number(precio).toLocaleString('es-AR')} ARS</span></div>
-    <div class="row"><span class="label">Método de pago</span><span class="value">${metodo}</span></div>
-    ${direccion ? `<div class="row"><span class="label">Dirección</span><span class="value">${direccion}</span></div>` : ''}
-    <a class="btn" href="https://wa.me/${WA_NUMBER}?text=Hola! Consulta sobre mi pedido reciente">
-      Consultar por WhatsApp
-    </a>
-  </div>
-  <div class="footer">© 2026 Arizona Jeans · San José de la Dormida · Córdoba</div>
-</div>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Compra confirmada — Arizona Jeans</title></head>
+<body style="margin:0;padding:0;background:#F0F2F5;font-family:'Segoe UI',Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#F0F2F5;padding:32px 16px;">
+<tr><td align="center">
+<table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.10);">
+
+  <!-- HEADER -->
+  <tr><td style="background:#0A0A0A;padding:24px 32px;text-align:center;">
+    <p style="margin:0;font-size:22px;font-weight:700;color:#fff;letter-spacing:1px;">
+      Arizona<span style="color:#7FFF00;">Jeans</span> ARG
+    </p>
+    <p style="margin:6px 0 0;font-size:10px;color:#888;letter-spacing:3px;text-transform:uppercase;">APPLE STORE · CÓRDOBA</p>
+  </td></tr>
+
+  <!-- BANNER CONFIRMADO -->
+  <tr><td style="background:#7FFF00;padding:11px 32px;text-align:center;">
+    <p style="margin:0;font-size:12px;font-weight:700;color:#0A0A0A;letter-spacing:2px;text-transform:uppercase;">
+      ✓ &nbsp;PAGO CONFIRMADO EXITOSAMENTE
+    </p>
+  </td></tr>
+
+  <!-- CUERPO -->
+  <tr><td style="background:#ffffff;padding:32px;">
+
+    <p style="margin:0 0 6px;font-size:18px;font-weight:600;color:#0A0A0A;">¡Hola, ${nombre}!</p>
+    <p style="margin:0 0 24px;font-size:14px;line-height:1.6;color:#555555;">
+      Recibimos tu pago correctamente. Nuestro equipo te va a contactar
+      en menos de <strong style="color:#0A0A0A;">1 hora</strong> para coordinar la entrega.
+    </p>
+
+    <!-- Detalle del pedido -->
+    <table width="100%" cellpadding="0" cellspacing="0"
+      style="background:#FAFAFA;border:1px solid #E8E8E8;border-radius:8px;margin-bottom:20px;overflow:hidden;">
+      <tr><td style="padding:12px 16px;border-bottom:1px solid #E8E8E8;">
+        <p style="margin:0;font-size:10px;font-weight:700;color:#5EC600;letter-spacing:2px;text-transform:uppercase;">DETALLE DEL PEDIDO</p>
+      </td></tr>
+      <tr><td style="padding:16px;">
+        <table width="100%" cellpadding="0" cellspacing="0">
+          <tr>
+            <td style="font-size:13px;color:#888;padding:6px 0;border-bottom:1px solid #F5F5F5;">Producto</td>
+            <td style="font-size:13px;font-weight:600;color:#0A0A0A;text-align:right;padding:6px 0;border-bottom:1px solid #F5F5F5;">${producto}</td>
+          </tr>
+          <tr>
+            <td style="font-size:13px;color:#888;padding:6px 0;border-bottom:1px solid #F5F5F5;">Total pagado</td>
+            <td style="font-size:20px;font-weight:700;color:#3D9900;text-align:right;padding:6px 0;border-bottom:1px solid #F5F5F5;">USD ${precio}</td>
+          </tr>
+          <tr>
+            <td style="font-size:13px;color:#888;padding:6px 0;border-bottom:1px solid #F5F5F5;">Fecha</td>
+            <td style="font-size:13px;color:#555;text-align:right;padding:6px 0;border-bottom:1px solid #F5F5F5;">${fecha}</td>
+          </tr>
+          <tr>
+            <td style="font-size:13px;color:#888;padding:6px 0;">N° referencia</td>
+            <td style="font-size:11px;color:#999;text-align:right;padding:6px 0;font-family:monospace;">${referencia}</td>
+          </tr>
+        </table>
+      </td></tr>
+    </table>
+
+    <!-- Próximos pasos -->
+    <table width="100%" cellpadding="0" cellspacing="0"
+      style="background:#F6FFF0;border:1px solid #D4EFC0;border-radius:8px;margin-bottom:24px;overflow:hidden;">
+      <tr><td style="padding:12px 16px;border-bottom:1px solid #D4EFC0;">
+        <p style="margin:0;font-size:10px;font-weight:700;color:#3D7A00;letter-spacing:2px;text-transform:uppercase;">¿QUÉ PASA AHORA?</p>
+      </td></tr>
+      <tr><td style="padding:16px;">
+        <table width="100%" cellpadding="0" cellspacing="0">
+          <tr>
+            <td width="28" valign="top" style="font-size:16px;padding:5px 0;">⚡</td>
+            <td style="font-size:13px;line-height:1.5;color:#0A0A0A;padding:5px 0;">
+              <strong>En menos de 1 hora</strong> te contactamos por WhatsApp al número que registraste.
+            </td>
+          </tr>
+          <tr>
+            <td width="28" valign="top" style="font-size:16px;padding:5px 0;">📦</td>
+            <td style="font-size:13px;line-height:1.5;color:#0A0A0A;padding:5px 0;">
+              <strong>Entrega en Córdoba Capital</strong> el mismo día. Acordamos horario y punto de encuentro.
+            </td>
+          </tr>
+          <tr>
+            <td width="28" valign="top" style="font-size:16px;padding:5px 0;">🚚</td>
+            <td style="font-size:13px;line-height:1.5;color:#0A0A0A;padding:5px 0;">
+              <strong>Envíos al interior</strong> del país coordinados por correo o moto.
+            </td>
+          </tr>
+        </table>
+      </td></tr>
+    </table>
+
+    <!-- CTA WhatsApp -->
+    <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center">
+      <a href="https://wa.me/5493521410478"
+        style="display:inline-block;background:#25D366;color:#ffffff;text-decoration:none;
+          padding:13px 32px;border-radius:8px;font-size:13px;font-weight:700;">
+        💬 &nbsp;Escribinos por WhatsApp
+      </a>
+    </td></tr></table>
+
+  </td></tr>
+
+  <!-- FOOTER -->
+  <tr><td style="background:#F8F8F8;border-top:1px solid #E8E8E8;padding:18px 32px;text-align:center;">
+    <p style="margin:0 0 3px;font-size:11px;color:#999;">Arizona Jeans · Córdoba Capital, Argentina</p>
+    <p style="margin:0;font-size:11px;color:#999;">📱 352 1410478 &nbsp;·&nbsp; 📸 @arizonajeans.sjd</p>
+  </td></tr>
+
+</table>
+</td></tr></table>
 </body></html>`;
 }
 
-// ── EMAIL ADMIN ──────────────────────────────
-function htmlAdmin({ nombre, email, tel, dni, producto, precio, metodo, direccion, direccionUrl }) {
+// ── Template ADMIN ──
+function templateAdmin({ nombre, email, telefono, dni, direccion, direccionUrl, producto, precio, referencia }) {
+  const fecha = new Date().toLocaleDateString("es-AR", {
+    day: "numeric", month: "long", year: "numeric",
+    hour: "2-digit", minute: "2-digit", timeZone: "America/Argentina/Cordoba",
+  });
+  const waLink = `https://wa.me/549${(telefono || "").replace(/\D/g, "")}`;
+  const mailLink = `mailto:${email}`;
   return `<!DOCTYPE html>
 <html lang="es">
-<head><meta charset="UTF-8"><style>
-body{font-family:Arial,sans-serif;background:#f4f0e8;margin:0;padding:0;}
-.wrap{max-width:560px;margin:32px auto;background:#0e0c0a;border:1px solid rgba(201,168,76,0.3);}
-.header{background:#a8813a;padding:20px 28px;}
-.header h1{margin:0;color:#fff;font-size:1.1rem;text-transform:uppercase;letter-spacing:.06em;}
-.body{padding:24px 28px;color:#f5f0e8;}
-.row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:.82rem;}
-.row .label{color:#9a9085;}
-.row .value{color:#f5f0e8;font-weight:600;text-align:right;max-width:60%;}
-.map-btn{display:inline-block;margin-top:14px;padding:10px 22px;background:#c9a84c;color:#000;text-decoration:none;font-weight:700;font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;}
-</style></head>
-<body>
-<div class="wrap">
-  <div class="header"><h1>🛍️ Nuevo pedido — Arizona Jeans</h1></div>
-  <div class="body">
-    <div class="row"><span class="label">Cliente</span><span class="value">${nombre}</span></div>
-    <div class="row"><span class="label">Email</span><span class="value">${email}</span></div>
-    <div class="row"><span class="label">WhatsApp</span><span class="value">${tel||'—'}</span></div>
-    <div class="row"><span class="label">DNI</span><span class="value">${dni||'—'}</span></div>
-    <div class="row"><span class="label">Prenda</span><span class="value">${producto}</span></div>
-    <div class="row"><span class="label">Precio</span><span class="value">$${Number(precio).toLocaleString('es-AR')} ARS</span></div>
-    <div class="row"><span class="label">Método</span><span class="value">${metodo}</span></div>
-    ${direccion ? `<div class="row"><span class="label">Dirección</span><span class="value">${direccion}</span></div>` : ''}
-    ${direccionUrl ? `<a class="map-btn" href="${direccionUrl}" target="_blank">📍 Ver en Google Maps</a>` : ''}
-  </div>
-</div>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Nueva venta — Arizona Jeans</title></head>
+<body style="margin:0;padding:0;background:#F0F2F5;font-family:'Segoe UI',Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#F0F2F5;padding:32px 16px;">
+<tr><td align="center">
+<table width="100%" cellpadding="0" cellspacing="0" style="max-width:540px;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.10);">
+
+  <!-- HEADER -->
+  <tr><td style="background:#0A0A0A;padding:18px 28px;">
+    <table width="100%" cellpadding="0" cellspacing="0"><tr>
+      <td>
+        <p style="margin:0;font-size:16px;font-weight:700;color:#fff;letter-spacing:1px;">
+          Arizona<span style="color:#7FFF00;">Jeans</span> ARG
+        </p>
+        <p style="margin:3px 0 0;font-size:10px;color:#888;letter-spacing:2px;text-transform:uppercase;">PANEL DE VENTAS</p>
+      </td>
+      <td align="right">
+        <span style="display:inline-block;background:#7FFF00;color:#0A0A0A;font-size:10px;font-weight:700;
+          padding:5px 13px;border-radius:20px;letter-spacing:1px;white-space:nowrap;">⚡ NUEVA VENTA</span>
+      </td>
+    </tr></table>
+  </td></tr>
+
+  <!-- CUERPO -->
+  <tr><td style="background:#ffffff;padding:28px;">
+
+    <!-- Producto vendido -->
+    <table width="100%" cellpadding="0" cellspacing="0"
+      style="background:#F6FFF0;border:1px solid #C8E8A0;border-radius:8px;margin-bottom:20px;">
+      <tr><td style="padding:16px;">
+        <p style="margin:0 0 3px;font-size:10px;font-weight:700;color:#3D7A00;letter-spacing:2px;text-transform:uppercase;">PRODUCTO VENDIDO</p>
+        <p style="margin:0;font-size:18px;font-weight:700;color:#0A0A0A;">${producto}</p>
+        <p style="margin:4px 0 0;font-size:22px;font-weight:700;color:#3D9900;">USD ${precio}</p>
+      </td></tr>
+    </table>
+
+    <!-- Label comprador -->
+    <p style="margin:0 0 10px;font-size:10px;font-weight:700;color:#888;letter-spacing:2px;text-transform:uppercase;">DATOS DEL COMPRADOR</p>
+
+    <!-- Tabla datos -->
+    <table width="100%" cellpadding="0" cellspacing="0"
+      style="border:1px solid #E8E8E8;border-radius:8px;overflow:hidden;margin-bottom:20px;">
+      <tr style="border-bottom:1px solid #F0F0F0;">
+        <td width="38%" style="padding:11px 14px;background:#FAFAFA;">
+          <p style="margin:0;font-size:11px;font-weight:600;color:#888;text-transform:uppercase;">Nombre</p>
+        </td>
+        <td style="padding:11px 14px;">
+          <p style="margin:0;font-size:13px;font-weight:600;color:#0A0A0A;">${nombre}</p>
+        </td>
+      </tr>
+      <tr style="border-bottom:1px solid #F0F0F0;">
+        <td width="38%" style="padding:11px 14px;background:#FAFAFA;">
+          <p style="margin:0;font-size:11px;font-weight:600;color:#888;text-transform:uppercase;">Email</p>
+        </td>
+        <td style="padding:11px 14px;">
+          <a href="${mailLink}" style="font-size:13px;color:#0066CC;text-decoration:none;">${email}</a>
+        </td>
+      </tr>
+      <tr style="border-bottom:1px solid #F0F0F0;">
+        <td width="38%" style="padding:11px 14px;background:#FAFAFA;">
+          <p style="margin:0;font-size:11px;font-weight:600;color:#888;text-transform:uppercase;">Teléfono</p>
+        </td>
+        <td style="padding:11px 14px;">
+          <p style="margin:0;font-size:13px;color:#0A0A0A;">${telefono || "No ingresado"}</p>
+        </td>
+      </tr>
+      <tr style="border-bottom:1px solid #F0F0F0;">
+        <td width="38%" style="padding:11px 14px;background:#FAFAFA;">
+          <p style="margin:0;font-size:11px;font-weight:600;color:#888;text-transform:uppercase;">DNI</p>
+        </td>
+        <td style="padding:11px 14px;">
+          <p style="margin:0;font-size:13px;color:#0A0A0A;">${dni || "No ingresado"}</p>
+        </td>
+      </tr>
+      <tr style="border-bottom:1px solid #F0F0F0;">
+        <td width="38%" style="padding:11px 14px;background:#FAFAFA;">
+          <p style="margin:0;font-size:11px;font-weight:600;color:#888;text-transform:uppercase;">Dirección entrega</p>
+        </td>
+        <td style="padding:11px 14px;">
+          ${direccionUrl
+            ? `<a href="${direccionUrl}" style="font-size:13px;color:#0066CC;text-decoration:none;">${direccion || "Ver en Maps"}</a>`
+            : `<p style="margin:0;font-size:13px;color:#0A0A0A;">${direccion || "No ingresada"}</p>`
+          }
+        </td>
+      </tr>
+      <tr style="border-bottom:1px solid #F0F0F0;">
+        <td width="38%" style="padding:11px 14px;background:#FAFAFA;">
+          <p style="margin:0;font-size:11px;font-weight:600;color:#888;text-transform:uppercase;">Fecha y hora</p>
+        </td>
+        <td style="padding:11px 14px;">
+          <p style="margin:0;font-size:13px;color:#0A0A0A;">${fecha}</p>
+        </td>
+      </tr>
+      <tr>
+        <td width="38%" style="padding:11px 14px;background:#FAFAFA;">
+          <p style="margin:0;font-size:11px;font-weight:600;color:#888;text-transform:uppercase;">Referencia MP</p>
+        </td>
+        <td style="padding:11px 14px;">
+          <p style="margin:0;font-size:11px;color:#999;font-family:monospace;">${referencia}</p>
+        </td>
+      </tr>
+    </table>
+
+    <!-- Acciones rápidas -->
+    <p style="margin:0 0 10px;font-size:10px;font-weight:700;color:#888;letter-spacing:2px;text-transform:uppercase;">ACCIONES RÁPIDAS</p>
+    <table width="100%" cellpadding="0" cellspacing="0"><tr>
+      <td width="32%" style="padding-right:4px;">
+        <a href="${waLink}"
+          style="display:block;text-align:center;background:#25D366;color:#ffffff;text-decoration:none;
+            padding:12px;border-radius:8px;font-size:12px;font-weight:700;">
+          💬 WhatsApp
+        </a>
+      </td>
+      <td width="32%" style="padding:0 4px;">
+        <a href="${mailLink}"
+          style="display:block;text-align:center;background:#0A0A0A;color:#ffffff;text-decoration:none;
+            padding:12px;border-radius:8px;font-size:12px;font-weight:700;">
+          ✉️ Email
+        </a>
+      </td>
+      <td width="36%" style="padding-left:4px;">
+        <a href="${direccionUrl || `https://maps.google.com/?q=${encodeURIComponent(direccion || 'Córdoba Argentina')}`}"
+          style="display:block;text-align:center;background:#4285F4;color:#ffffff;text-decoration:none;
+            padding:12px;border-radius:8px;font-size:12px;font-weight:700;">
+          📍 Ver en Maps
+        </a>
+      </td>
+    </tr></table>
+
+  </td></tr>
+
+  <!-- FOOTER -->
+  <tr><td style="background:#F8F8F8;border-top:1px solid #E8E8E8;padding:16px 28px;text-align:center;">
+    <p style="margin:0;font-size:11px;color:#BBB;">Flash Tech ARG · Panel interno · No reenviar</p>
+  </td></tr>
+
+</table>
+</td></tr></table>
 </body></html>`;
 }
 
-// ═══════════════════════════════════════════
-// RUTAS
-// ═══════════════════════════════════════════
+// ── CREAR PAGO ──
+app.post("/api/crear-pago", async (req, res) => {
+  const { producto, precio, cantidad = 1, comprador } = req.body;
+  if (!producto || !precio) {
+    return res.status(400).json({ error: "Faltan datos" });
+  }
+  try {
+    const body = {
+      items: [{ title: producto, quantity: Number(cantidad), unit_price: Number(precio), currency_id: "ARS" }],
+      payer: comprador ? { name: comprador.nombre, email: comprador.email, phone: { number: comprador.tel || "" } } : {},
+      back_urls: {
+        success: `${BASE_URL}/exito.html`,
+        failure: `${BASE_URL}/error.html`,
+        pending: `${BASE_URL}/pendiente.html`,
+      },
+      auto_return: "approved",
+      statement_descriptor: "ARIZONA JEANS",
+      external_reference: `FT-${Date.now()}`,
+      notification_url: `${BASE_URL}/api/webhook`,
+    };
 
-// Health check
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', tienda: 'Arizona Jeans', ts: new Date().toISOString() });
+    const result = await preference.create({ body });
+
+    console.log("📦 Comprador recibido en /crear-pago:", JSON.stringify(comprador));
+
+    // Guardar bajo AMBAS claves: preference.id y external_reference
+    // El webhook puede recibir cualquiera de las dos dependiendo de la version de MP
+    if (comprador && result.id) {
+      const datosPedido = {
+        ...comprador,
+        producto,
+        precioUSD: Math.round(Number(precio) / 1200),
+      };
+      await guardarPedido(result.id, datosPedido);
+      await guardarPedido(body.external_reference, datosPedido);
+      console.log('✅ Pedido guardado bajo:', result.id, 'y', body.external_reference);
+    }
+
+    res.json({ id: result.id, init_point: result.init_point });
+  } catch (error) {
+    console.error("Error MP:", error);
+    res.status(500).json({ error: error.message });
+  }
 });
 
-// Crear pago MercadoPago
-app.post('/api/crear-pago', async (req, res) => {
-  const { producto, precio, cantidad = 1, comprador } = req.body;
-  if (!producto || !precio) return res.status(400).json({ error: 'Faltan datos' });
+// ── SIMULAR COMPRA (ADMIN) ──
+app.post("/api/simular-compra", async (req, res) => {
+  try {
+    const {
+      nombre,
+      email,
+      telefono,
+      dni,
+      direccion,
+      direccionUrl,
+      producto,
+      precioUSD
+    } = req.body;
 
-  // Enviar emails en paralelo (si están configurados)
-  const transport = createTransport();
-  if (transport && comprador?.email) {
-    const metodoLabel = 'MercadoPago';
-    const promises = [
-      transport.sendMail({
-        from: `"Arizona Jeans" <${GMAIL_USER}>`,
-        to: comprador.email,
-        subject: `✨ Pedido recibido — ${producto}`,
-        html: htmlCliente({
-          nombre: comprador.nombre,
-          producto,
-          precio,
-          metodo: metodoLabel,
-          direccion: comprador.direccion
-        })
-      }).catch(e => console.warn('Email cliente:', e.message))
-    ];
-    if (ADMIN_EMAIL) {
-      promises.push(
-        transport.sendMail({
-          from: `"Arizona Jeans" <${GMAIL_USER}>`,
-          to: ADMIN_EMAIL,
-          subject: `🛍️ Nuevo pedido: ${producto} — ${comprador.nombre}`,
-          html: htmlAdmin({ ...comprador, producto, precio, metodo: metodoLabel })
-        }).catch(e => console.warn('Email admin:', e.message))
-      );
+    if (!nombre || !email || !producto || !precioUSD) {
+      return res.status(400).json({
+        error: "Faltan datos"
+      });
     }
-    await Promise.allSettled(promises);
-  }
 
-  // Si no hay token MP devolvemos error claro
-  if (!MP_ACCESS_TOKEN || !mpClient) {
-    return res.status(503).json({ error: 'MP_ACCESS_TOKEN no configurado' });
+    // Referencia fake estilo MP
+    const referencia = `ADMIN-${Date.now()}`;
+
+    // Guardar pedido en Firestore
+    await guardarPedido(referencia, {
+      nombre,
+      email,
+      tel: telefono || "No asignado",
+      dni: dni || "No asignado",
+      direccion: direccion || "",
+      direccionUrl: direccionUrl || "",
+      producto,
+      precioUSD
+    });
+
+    console.log("🧪 Compra simulada:", referencia);
+
+    // EMAIL CLIENTE
+    await enviarEmail({
+      to: email,
+      subject: "✅ Compra confirmada — Arizona Jeans",
+      html: templateCliente({
+        nombre,
+        producto,
+        precio: precioUSD,
+        referencia
+      }),
+    });
+
+    console.log("✅ Email cliente enviado");
+
+    // EMAIL ADMIN
+    await enviarEmail({
+      to: ADMIN_EMAIL,
+      subject: `🧪 Venta simulada ${producto}`,
+      html: templateAdmin({
+        nombre,
+        email,
+        telefono,
+        dni: dni || "No asignado",
+        direccion: direccion || "No asignado",
+        direccionUrl: direccionUrl || "No asignado",
+        producto,
+        precio: precioUSD,
+        referencia
+      }),
+    });
+
+    console.log("✅ Email admin enviado");
+
+    res.json({
+      ok: true,
+      referencia
+    });
+
+  } catch (err) {
+    console.error("❌ ERROR SIMULANDO COMPRA:", err);
+    res.status(500).json({
+      error: err.message
+    });
   }
+});
+
+// ── WEBHOOK ──
+app.post("/api/webhook", async (req, res) => {
+  console.log("📩 WEBHOOK RECIBIDO");
+  console.log("BODY:", JSON.stringify(req.body));
+  console.log("QUERY:", JSON.stringify(req.query));
+
+  // MercadoPago v1 (WebHook)  → body.type  + body.data.id
+  // MercadoPago v2 (Feed)     → query.topic + query.id
+  const type   = req.body.type  || req.body.topic  || req.query.type  || req.query.topic;
+  const dataId = req.body.data?.id || req.query["data.id"] || req.query.id || req.body.id;
+
+  console.log("TIPO:", type);
+  console.log("DATA ID:", dataId);
 
   try {
-    const { Preference } = require('mercadopago');
-    const pref = new Preference(mpClient);
-    const result = await pref.create({
-      body: {
-        items: [{ title: producto, unit_price: Number(precio), quantity: Number(cantidad), currency_id: 'ARS' }],
-        payer: { name: comprador?.nombre, email: comprador?.email },
-        back_urls: {
-          success: `${BASE_URL}/exito.html`,
-          failure: `${BASE_URL}/error.html`,
-          pending: `${BASE_URL}/pendiente.html`
-        },
-        auto_return: 'approved',
-        statement_descriptor: 'ARIZONA JEANS',
-        external_reference: `${Date.now()}-${(comprador?.nombre||'').replace(/\s/g,'-')}`
-      }
+    if (type !== "payment" || !dataId) {
+      console.log("❌ Evento ignorado — tipo:", type, "| id:", dataId);
+      return res.sendStatus(200);
+    }
+
+    console.log("🔍 Consultando pago en MP:", dataId);
+    const pago = await payment.get({ id: dataId });
+
+    // preference_id puede venir undefined en Feed v2, usar external_reference como fallback
+    const prefId = pago.preference_id || pago.external_reference;
+    console.log("💳 Status:", pago.status, "| prefId:", prefId);
+
+    if (pago.status !== "approved") {
+      console.log("⏳ Pago no aprobado, status:", pago.status);
+      return res.sendStatus(200);
+    }
+
+    // Recuperar datos del comprador desde Firestore
+    // Intentar con preference_id primero, luego con external_reference como fallback
+    let comprador = await leerPedido(prefId);
+    if (!comprador && pago.external_reference && pago.external_reference !== prefId) {
+      console.log("🔄 Reintentando con external_reference:", pago.external_reference);
+      comprador = await leerPedido(pago.external_reference);
+    }
+    if (!comprador && pago.preference_id && pago.preference_id !== prefId) {
+      console.log("🔄 Reintentando con preference_id:", pago.preference_id);
+      comprador = await leerPedido(pago.preference_id);
+    }
+    console.log("👤 Comprador Firestore:", JSON.stringify(comprador));
+    console.log("🔑 prefId usado:", prefId);
+    console.log("🔑 external_reference del pago:", pago.external_reference);
+    console.log("🔑 preference_id del pago:", pago.preference_id);
+
+    // ── FIX 1: usar external_reference del pago como referencia legible ──
+    // Antes: `FT-${pago.id}` usaba el ID numérico interno de MP
+    const referencia = pago.external_reference || `FT-${pago.id}`;
+
+    const nombre     = comprador?.nombre    || pago.payer?.first_name || "Cliente";
+    // ── FIX 2: NUNCA usar pago.payer.email — es el email de la cuenta MP del pagador,
+    //    no el email que el cliente escribió en el formulario ──
+    const emailDst   = comprador?.email     || "";
+    const telefono   = comprador?.telefono  || "";
+    const producto   = comprador?.producto  || "Producto Apple";
+    const precio     = comprador?.precioUSD || Math.round(pago.transaction_amount / 1200);
+
+    if (!comprador) {
+      console.warn("⚠️ No se encontró el pedido en Firestore — los datos del admin estarán incompletos");
+    }
+
+    console.log("📧 Destinatario cliente:", emailDst);
+
+    // Deduplicación atómica: registrar el payment.id en Firestore
+    // Si ya existe (otro webhook lo registró antes) → ignorar
+    const esNuevo = await registrarPagoUnico(String(pago.id));
+    if (!esNuevo) return res.sendStatus(200);
+
+    // Email al cliente
+    if (emailDst) {
+      await enviarEmail({
+        to: emailDst,
+        subject: "✅ Compra confirmada — Arizona Jeans",
+        html: templateCliente({ nombre, producto, precio, referencia }),
+      });
+      console.log("✅ Email cliente enviado");
+    } else {
+      console.warn("⚠️ Sin email de destino para el cliente");
+    }
+
+    // Email al admin
+    await enviarEmail({
+      to: ADMIN_EMAIL,
+      subject: `⚡ Nueva venta ${producto}`,
+      html: templateAdmin({
+        nombre,
+        email: emailDst,
+        telefono,
+        dni: comprador?.dni || "",
+        direccion: comprador?.direccion || "",
+        direccionUrl: comprador?.direccionUrl || "",
+        producto,
+        precio,
+        referencia
+      }),
     });
-    res.json({ init_point: result.init_point });
-  } catch (e) {
-    console.error('[AZ] MP error:', e.message);
-    res.status(500).json({ error: 'Error al crear preferencia' });
+    console.log("✅ Email admin enviado");
+
+  } catch (err) {
+    console.error("❌ ERROR WEBHOOK:", err.message);
+    console.error(err);
   }
+
+  // 200 al final para que Vercel no corte la ejecución async
+  return res.sendStatus(200);
 });
 
-// Webhook MercadoPago
-app.post('/api/webhook', async (req, res) => {
-  const { type, data } = req.body;
-  if (type === 'payment' && data?.id) {
-    console.log('[AZ] Pago recibido:', data.id);
-  }
-  res.sendStatus(200);
-});
-
-// Ruta catch-all para SPAs
-app.get('*', (req, res) => {
-  if (req.path.startsWith('/api')) return res.status(404).json({ error: 'Not found' });
-  res.sendFile(path.join(__dirname, '../public/index.html'));
+// ── HEALTH ──
+app.get("/api/health", (req, res) => {
+  res.json({
+    status:   "ok",
+    tienda:   "Arizona Jeans",
+    mp:       process.env.MP_ACCESS_TOKEN ? "✅ OK" : "⚠️ Falta MP_ACCESS_TOKEN",
+    email:    GMAIL_USER                  ? "✅ OK" : "⚠️ Falta GMAIL_USER",
+    password: GMAIL_APP_PASSWORD          ? "✅ OK" : "⚠️ Falta GMAIL_APP_PASSWORD",
+    firebase: FIREBASE_PROJECT_ID         ? "✅ OK" : "⚠️ Falta FIREBASE_PROJECT_ID",
+  });
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`[AZ] Arizona Jeans corriendo en puerto ${PORT}`));
-
+app.listen(PORT, () => console.log(`🚀 Arizona Jeans en http://localhost:${PORT}`));
 module.exports = app;
