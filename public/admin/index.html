@@ -39,6 +39,8 @@ nav{background:var(--dk);border-bottom:1px solid var(--gold-border);padding:12px
 #user-email{font-size:.72rem;color:var(--gr);}
 .btn-logout{background:none;border:1px solid rgba(248,113,113,0.3);color:var(--red);padding:7px 14px;font-family:'Inter',sans-serif;font-weight:600;font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;border-radius:0;}
 .btn-logout:hover{background:rgba(248,113,113,0.08);}
+.btn-nav-action{background:none;border:1px solid var(--gold-border);color:var(--gold);padding:7px 14px;font-family:'Inter',sans-serif;font-weight:600;font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;border-radius:0;text-decoration:none;display:inline-flex;align-items:center;gap:5px;}
+.btn-nav-action:hover{background:rgba(201,168,76,0.1);}
 .main{padding:28px;}
 
 /* ── TABS ── */
@@ -165,6 +167,8 @@ nav{background:var(--dk);border-bottom:1px solid var(--gold-border);padding:12px
     </div>
     <div class="nav-right">
       <span id="user-email"></span>
+      <button class="btn-nav-action" onclick="simularCompra()">🛒 Simular compra</button>
+      <a class="btn-nav-action" href="index.html" target="_blank">🌐 Ver página</a>
       <button class="btn-logout" onclick="logout()">Cerrar sesión</button>
     </div>
   </nav>
@@ -256,9 +260,10 @@ nav{background:var(--dk);border-bottom:1px solid var(--gold-border);padding:12px
           </div>
           <div class="fg full">
             <label>Imagen del producto</label>
+            <div id="cloudinary-status" style="font-size:.68rem;padding:6px 10px;margin-bottom:6px;background:rgba(201,168,76,0.06);border:1px solid var(--gold-border);color:var(--gold);display:none;"></div>
             <div class="upload-area" id="upload-area" onclick="document.getElementById('img-file').click()">
               <p>📸 <strong>Hacé clic</strong> para subir una foto</p>
-              <p style="margin-top:4px;font-size:.7rem">JPG, PNG, WEBP · Máx. 5MB</p>
+              <p style="margin-top:4px;font-size:.7rem">JPG, PNG, WEBP · Máx. 5MB · Se sube a Cloudinary</p>
               <input type="file" id="img-file" accept="image/*" style="display:none" onchange="uploadImg(this)">
               <img id="img-preview" alt="Preview">
               <div id="img-progress"></div>
@@ -323,6 +328,10 @@ onAuthStateChanged(auth, user => {
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('app').style.display = 'block';
     document.getElementById('user-email').textContent = user.email;
+    // Mostrar estado de Cloudinary
+    const statusEl = document.getElementById('cloudinary-status');
+    statusEl.style.display = 'block';
+    statusEl.textContent = `☁️ Cloudinary: cloud="${CLOUDINARY_CLOUD}" · preset="${CLOUDINARY_PRESET}" · Si falla la subida, verificá que el preset esté en modo Unsigned en cloudinary.com`;
     cargar();
   } else {
     document.getElementById('login-screen').style.display = 'flex';
@@ -507,57 +516,57 @@ window.eliminar = async function(id, nombre) {
 };
 
 // ── UPLOAD IMAGEN (Cloudinary) ──
-window.uploadImg = function(input) {
+window.uploadImg = async function(input) {
   const file = input.files[0];
   if (!file) return;
   if (file.size > 5 * 1024 * 1024) { toast('La imagen es muy grande (máx 5MB)', 'err'); return; }
 
-  // Mostrar preview local inmediato
+  // Preview local inmediato
   const prev = document.getElementById('img-preview');
   prev.src = URL.createObjectURL(file);
   prev.style.display = 'block';
 
-  // Verificar que estén configuradas las credenciales
-  if (CLOUDINARY_CLOUD === 'TU_CLOUD_NAME' || CLOUDINARY_PRESET === 'TU_UPLOAD_PRESET') {
-    toast('⚠️ Configurá Cloudinary antes de subir imágenes', 'err');
-    return;
-  }
-
   const prog = document.getElementById('img-progress');
   prog.style.display = 'block';
-  prog.textContent = 'Subiendo imagen... 0%';
+  prog.textContent = '⏳ Subiendo imagen...';
 
   const formData = new FormData();
   formData.append('file', file);
   formData.append('upload_preset', CLOUDINARY_PRESET);
   formData.append('folder', 'arizona-jeans');
 
-  const xhr = new XMLHttpRequest();
-  xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`);
-
-  xhr.upload.onprogress = e => {
-    if (e.lengthComputable) {
-      prog.textContent = `Subiendo imagen... ${Math.round(e.loaded / e.total * 100)}%`;
-    }
-  };
-
-  xhr.onload = () => {
+  try {
+    const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`, {
+      method: 'POST',
+      body: formData
+    });
+    const data = await res.json();
     prog.style.display = 'none';
-    if (xhr.status === 200) {
-      const data = JSON.parse(xhr.responseText);
+    if (res.ok && data.secure_url) {
       document.getElementById('f-img').value = data.secure_url;
       toast('📸 Imagen subida correctamente');
     } else {
-      toast('Error al subir la imagen. Verificá tu configuración de Cloudinary.', 'err');
+      // Mostrar el error real de Cloudinary para facilitar debugging
+      const errMsg = data.error?.message || JSON.stringify(data);
+      toast('Error Cloudinary: ' + errMsg, 'err');
+      console.error('Cloudinary error:', data);
     }
-  };
-
-  xhr.onerror = () => {
+  } catch (e) {
     prog.style.display = 'none';
-    toast('Error de red al subir la imagen.', 'err');
-  };
+    toast('Error de red al subir: ' + e.message, 'err');
+    console.error('Upload error:', e);
+  }
+};
 
-  xhr.send(formData);
+// ── SIMULAR COMPRA ──
+window.simularCompra = function() {
+  // Abre la tienda en nueva pestaña con parámetro de modo simulación
+  const win = window.open('index.html?simular=1', '_blank');
+  if (!win) {
+    toast('Permití las ventanas emergentes para simular la compra', 'err');
+  } else {
+    toast('🛒 Modo simulación abierto en nueva pestaña');
+  }
 };
 
 // ── RESET FORM ──
