@@ -77,12 +77,12 @@ nav{background:var(--dk);border-bottom:1px solid var(--gold-border);padding:12px
 #form-msg{font-size:.78rem;margin-top:10px;display:none;}
 
 /* ── UPLOAD ── */
-.upload-area{border:1px dashed var(--gold-border);background:var(--bk);padding:22px;text-align:center;cursor:pointer;transition:border-color .2s;}
+.upload-area{border:1px dashed var(--gold-border);background:var(--bk);padding:22px;text-align:center;cursor:pointer;transition:border-color .2s;position:relative;}
 .upload-area:hover{border-color:var(--gold);}
 .upload-area p{font-size:.78rem;color:var(--gr);}
 .upload-area strong{color:var(--gold);}
 #img-preview{max-width:100%;max-height:180px;margin-top:10px;display:none;border:1px solid var(--gold-border);}
-#img-progress{height:2px;background:var(--gold);width:0;transition:width .3s;margin-top:6px;display:none;}
+#img-progress{font-size:.72rem;color:var(--gold);margin-top:8px;display:none;background:rgba(201,168,76,0.08);border:1px solid var(--gold-border);padding:6px 10px;}
 
 /* ── PRODUCT LIST ── */
 .list-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px;}
@@ -132,6 +132,17 @@ nav{background:var(--dk);border-bottom:1px solid var(--gold-border);padding:12px
 </style>
 </head>
 <body>
+
+<div class="sidebar-enhanced" style="position:fixed;left:0;top:0;bottom:0;width:220px;background:#141210;border-right:1px solid rgba(201,168,76,0.2);padding:20px;z-index:50;">
+  <h2 style="font-family:'Playfair Display',serif;color:#c9a84c;margin-bottom:24px;">Arizona Admin</h2>
+  <button onclick="showTab('lista', document.querySelectorAll('.tab')[0])" style="display:block;width:100%;margin-bottom:10px;padding:10px;background:#1a1714;color:#f5f0e8;border:1px solid rgba(201,168,76,0.2);cursor:pointer;">📋 Inventario</button>
+  <button onclick="showTab('nuevo', document.querySelectorAll('.tab')[1])" style="display:block;width:100%;padding:10px;background:#1a1714;color:#f5f0e8;border:1px solid rgba(201,168,76,0.2);cursor:pointer;">➕ Nueva prenda</button>
+</div>
+<style>
+@media(min-width:900px){
+  nav,.main{margin-left:220px;}
+}
+</style>
 
 <!-- LOGIN -->
 <div id="login-screen">
@@ -282,23 +293,27 @@ nav{background:var(--dk);border-bottom:1px solid var(--gold-border);padding:12px
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js';
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js';
 import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js';
-import { getStorage, ref, uploadBytesResumable, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-storage.js';
+// Firebase Storage eliminado — imágenes gestionadas por Cloudinary (gratis, sin tarjeta)
 
-// ══ PEGÁ TUS CREDENCIALES FIREBASE ACÁ ══
+// ══ CREDENCIALES FIREBASE ══
 const firebaseConfig = {
   apiKey: "AIzaSyCbH_m-ciMujL09xqPkCBkfM3RLO6Xq7JY",
   authDomain: "arizona-jeans.firebaseapp.com",
   projectId: "arizona-jeans",
-  storageBucket: "arizona-jeans.firebasestorage.app",
   messagingSenderId: "913791532671",
   appId: "1:913791532671:web:dfe9c6eeece2b6bffac94a"
 };
-// ════════════════════════════════════════
+// ══ CREDENCIALES CLOUDINARY ══
+// 1. Creá cuenta gratis en https://cloudinary.com/users/register_free
+// 2. En el dashboard copiá tu "Cloud name" y pegalo abajo
+// 3. En Settings → Upload → Add upload preset → Mode: Unsigned → guardá el nombre
+const CLOUDINARY_CLOUD = 'dugk8dqvk';   // ← reemplazar
+const CLOUDINARY_PRESET = 'ArizonaJeans'; // ← reemplazar
+// ══════════════════════════
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-const storage = getStorage(app);
 
 let productos = [];
 
@@ -491,27 +506,58 @@ window.eliminar = async function(id, nombre) {
   } catch (e) { toast('Error: ' + e.message, 'err'); }
 };
 
-// ── UPLOAD IMAGEN ──
+// ── UPLOAD IMAGEN (Cloudinary) ──
 window.uploadImg = function(input) {
   const file = input.files[0];
   if (!file) return;
   if (file.size > 5 * 1024 * 1024) { toast('La imagen es muy grande (máx 5MB)', 'err'); return; }
+
+  // Mostrar preview local inmediato
   const prev = document.getElementById('img-preview');
+  prev.src = URL.createObjectURL(file);
+  prev.style.display = 'block';
+
+  // Verificar que estén configuradas las credenciales
+  if (CLOUDINARY_CLOUD === 'TU_CLOUD_NAME' || CLOUDINARY_PRESET === 'TU_UPLOAD_PRESET') {
+    toast('⚠️ Configurá Cloudinary antes de subir imágenes', 'err');
+    return;
+  }
+
   const prog = document.getElementById('img-progress');
-  prev.src = URL.createObjectURL(file); prev.style.display = 'block';
-  const storRef = ref(storage, `productos/${Date.now()}_${file.name.replace(/\s/g,'_')}`);
-  const task = uploadBytesResumable(storRef, file);
   prog.style.display = 'block';
-  task.on('state_changed',
-    snap => { prog.style.width = (snap.bytesTransferred / snap.totalBytes * 100) + '%'; },
-    err => { toast('Error al subir imagen: ' + err.message, 'err'); prog.style.display = 'none'; },
-    async () => {
-      const url = await getDownloadURL(task.snapshot.ref);
-      document.getElementById('f-img').value = url;
-      prog.style.display = 'none';
-      toast('📸 Imagen subida');
+  prog.textContent = 'Subiendo imagen... 0%';
+
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('upload_preset', CLOUDINARY_PRESET);
+  formData.append('folder', 'arizona-jeans');
+
+  const xhr = new XMLHttpRequest();
+  xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`);
+
+  xhr.upload.onprogress = e => {
+    if (e.lengthComputable) {
+      prog.textContent = `Subiendo imagen... ${Math.round(e.loaded / e.total * 100)}%`;
     }
-  );
+  };
+
+  xhr.onload = () => {
+    prog.style.display = 'none';
+    if (xhr.status === 200) {
+      const data = JSON.parse(xhr.responseText);
+      document.getElementById('f-img').value = data.secure_url;
+      toast('📸 Imagen subida correctamente');
+    } else {
+      toast('Error al subir la imagen. Verificá tu configuración de Cloudinary.', 'err');
+    }
+  };
+
+  xhr.onerror = () => {
+    prog.style.display = 'none';
+    toast('Error de red al subir la imagen.', 'err');
+  };
+
+  xhr.send(formData);
 };
 
 // ── RESET FORM ──
@@ -530,6 +576,7 @@ window.resetForm = function() {
 
 // Enter en login
 document.getElementById('lpass').addEventListener('keydown', e => { if (e.key === 'Enter') window.login(); });
+
 </script>
 </body>
 </html>
