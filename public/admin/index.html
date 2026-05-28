@@ -167,8 +167,8 @@ nav{background:var(--dk);border-bottom:1px solid var(--gold-border);padding:12px
     </div>
     <div class="nav-right">
       <span id="user-email"></span>
-      <button class="btn-nav-action" onclick="simularCompra()">🛒 Simular compra</button>
-      <a class="btn-nav-action" href="index.html" target="_blank">🌐 Ver página</a>
+      <button class="btn-nav-action" onclick="abrirSimulador()">🛒 Simular compra</button>
+      <button class="btn-nav-action" onclick="window.open('/', '_blank')">🌐 Ver página</button>
       <button class="btn-logout" onclick="logout()">Cerrar sesión</button>
     </div>
   </nav>
@@ -288,6 +288,29 @@ nav{background:var(--dk);border-bottom:1px solid var(--gold-border);padding:12px
         </div>
         <div id="form-msg"></div>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL SIMULAR COMPRA -->
+<div id="sim-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9998;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px);">
+  <div style="background:var(--c1);border:1px solid var(--gold-border);width:100%;max-width:480px;box-shadow:0 0 60px rgba(201,168,76,.12);">
+    <div style="background:var(--dk);border-bottom:1px solid var(--gold-border);padding:16px 22px;display:flex;align-items:center;justify-content:space-between;">
+      <span style="font-family:'Playfair Display',serif;font-size:1.05rem;font-weight:700;">🧪 Simular compra</span>
+      <button onclick="cerrarSimulador()" style="background:none;border:none;color:var(--gr);font-size:1.3rem;cursor:pointer;line-height:1;">✕</button>
+    </div>
+    <div style="padding:22px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="fg" style="grid-column:1/-1;"><label>Producto *</label><input id="sim-prod" type="text" placeholder="Mom Jean Clásico"></div>
+        <div class="fg"><label>Precio USD *</label><input id="sim-precio" type="number" placeholder="35"></div>
+        <div class="fg"><label>Nombre *</label><input id="sim-nombre" type="text" placeholder="Juan García"></div>
+        <div class="fg" style="grid-column:1/-1;"><label>Email *</label><input id="sim-email" type="email" placeholder="juan@gmail.com"></div>
+        <div class="fg" style="grid-column:1/-1;"><label>Teléfono</label><input id="sim-tel" type="text" placeholder="3511234567"></div>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;gap:10px;padding:14px 22px;border-top:1px solid var(--br);background:var(--dk);">
+      <button class="btn-cancel" onclick="cerrarSimulador()">Cancelar</button>
+      <button id="sim-exec-btn" class="btn-save" onclick="ejecutarSimulacion()">⚡ Ejecutar simulación</button>
     </div>
   </div>
 </div>
@@ -559,13 +582,46 @@ window.uploadImg = async function(input) {
 };
 
 // ── SIMULAR COMPRA ──
-window.simularCompra = function() {
-  // Abre la tienda en nueva pestaña con parámetro de modo simulación
-  const win = window.open('index.html?simular=1', '_blank');
-  if (!win) {
-    toast('Permití las ventanas emergentes para simular la compra', 'err');
-  } else {
-    toast('🛒 Modo simulación abierto en nueva pestaña');
+window.abrirSimulador = function() {
+  document.getElementById('sim-modal').style.display = 'flex';
+};
+
+window.cerrarSimulador = function() {
+  document.getElementById('sim-modal').style.display = 'none';
+};
+
+window.ejecutarSimulacion = async function() {
+  const producto  = document.getElementById('sim-prod').value.trim();
+  const precioUSD = Number(document.getElementById('sim-precio').value);
+  const nombre    = document.getElementById('sim-nombre').value.trim();
+  const email     = document.getElementById('sim-email').value.trim();
+  const telefono  = document.getElementById('sim-tel').value.trim();
+
+  if (!producto || !precioUSD || !nombre || !email) {
+    toast('Completá todos los campos obligatorios', 'err');
+    return;
+  }
+
+  const btn = document.getElementById('sim-exec-btn');
+  btn.disabled = true;
+  btn.textContent = 'Enviando...';
+
+  try {
+    const res = await fetch('/api/simular-compra', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ producto, precioUSD, nombre, email, telefono })
+    });
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error || 'Error desconocido');
+    toast('✅ Compra simulada — emails enviados correctamente');
+    window.cerrarSimulador();
+  } catch (err) {
+    console.error(err);
+    toast('❌ Error al simular: ' + err.message, 'err');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '⚡ Ejecutar simulación';
   }
 };
 
